@@ -12,7 +12,7 @@ ROUTES = {
     "Preferences": preferences.show
 }
 
-def navigate_to():
+def show_page():
     """Determina qué pantalla mostrar según la selección en el sidebar."""
     page = st.session_state.get("selected_page", "Home")  # Por defecto, muestra 'Home'
     

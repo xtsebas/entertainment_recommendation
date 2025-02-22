@@ -2,13 +2,15 @@ import streamlit as st
 import os
 import sys
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from src.router import navigate_to
+from src.auth import login
+from src.router import show_page
+from src.session_manager import is_authenticated
 
-st.set_page_config(page_title="Entertainment Recommendation", layout="wide")
+# Configuración de la página
+st.set_page_config(page_title="Sistema de Recomendación", layout="wide")
 
-# Mostrar sidebar para la navegación
-from src.sidebar import show_sidebar
-show_sidebar()
-
-# Mostrar la página seleccionada
-navigate_to()
+# Verificar si el usuario ha iniciado sesión
+if not is_authenticated():
+    login()
+else:
+    show_page()
