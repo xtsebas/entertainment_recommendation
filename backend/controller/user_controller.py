@@ -1,6 +1,11 @@
 from neo4j import GraphDatabase
+from dotenv import load_dotenv
 import os
+import sys
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from view.user import User
+
+load_dotenv()
 
 # Configuración de conexión a Neo4j Aura
 NEO4J_URI = os.getenv("NEO4J_URI") 
@@ -14,6 +19,7 @@ class UserController:
     def close(self):
         self.driver.close()
 
+    #Create user
     def create_user(self, user: User):
         """
         Inserta un usuario en Neo4j.
@@ -25,10 +31,11 @@ class UserController:
     @staticmethod
     def _create_user_tx(tx, user: User):
         query = """
-        CREATE (u:User {user_id: $user_id, nombre: $nombre, edad: $edad, generos_favoritos: $generos_favoritos, duracion_favorita: $duracion_favorita})
+        CREATE (u:User {user_id: $user_id, name: $name, age: $age, favorite_genres: $favorite_genres, favorite_duration: $favorite_duration})
         """
-        tx.run(query, user_id=user.node_id, nombre=user.nombre, edad=user.edad, generos_favoritos=user.generos_favoritos, duracion_favorita=user.duracion_favorita)
+        tx.run(query, user_id=user.node_id, name=user.name, age=user.age, favorite_genres=user.favorite_genres, favorite_duration=user.favorite_duration)
 
+    #Get user
     def get_users(self):
         """
         Obtiene todos los usuarios almacenados en Neo4j.
@@ -43,6 +50,7 @@ class UserController:
         result = tx.run(query)
         return [record["u"] for record in result]
 
+    #Delete user
     def delete_user(self, user_id: str):
         """
         Elimina un usuario de Neo4j.

@@ -2,37 +2,37 @@ from typing import List
 from model.node import Node
 
 class User(Node):
-    def __init__(self, user_id: str, nombre: str, edad: int, generos_favoritos: List[str], duracion_favorita: int):
-        super().__init__(user_id, "User", nombre=nombre, edad=edad, generos_favoritos=generos_favoritos, duracion_favorita=duracion_favorita)
+    def __init__(self, user_id: str, name: str, age: int, favorite_genres: List[str], favorite_duration: int):
+        super().__init__(user_id, "User", name=name, age=age, favorite_genres=favorite_genres, favorite_duration=favorite_duration)
 
     @property
-    def nombre(self):
-        return self.properties['nombre']
+    def name(self):
+        return self.properties['name']
     
-    @nombre.setter
-    def nombre(self, value: str):
-        self.properties['nombre'] = value
-    
-    @property
-    def edad(self):
-        return self.properties['edad']
-    
-    @edad.setter
-    def edad(self, value: int):
-        self.properties['edad'] = value
+    @name.setter
+    def name(self, value: str):
+        self.properties['name'] = value
     
     @property
-    def generos_favoritos(self):
-        return self.properties['generos_favoritos']
+    def age(self):
+        return self.properties['age']
     
-    @generos_favoritos.setter
-    def generos_favoritos(self, value: List[str]):
-        self.properties['generos_favoritos'] = value
+    @age.setter
+    def age(self, value: int):
+        self.properties['age'] = value
     
     @property
-    def duracion_favorita(self):
-        return self.properties['duracion_favorita']
+    def favorite_genres(self):
+        return self.properties['favorite_genres']
     
-    @duracion_favorita.setter
-    def duracion_favorita(self, value: int):
-        self.properties['duracion_favorita'] = value
+    @favorite_genres.setter
+    def favorite_genres(self, value: List[str]):
+        self.properties['favorite_genres'] = value
+    
+    @property
+    def favorite_duration(self):
+        return self.properties['favorite_duration']
+    
+    @favorite_duration.setter
+    def favorite_duration(self, value: int):
+        self.properties['favorite_duration'] = value

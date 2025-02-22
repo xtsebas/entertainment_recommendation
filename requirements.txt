@@ -2,3 +2,5 @@ neo4j
 typing
 streamlit
 datetime
+unittest
+dotenv
