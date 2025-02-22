@@ -25,7 +25,7 @@ class UserController:
         Inserta un usuario en Neo4j.
         """
         with self.driver.session() as session:
-            session.write_transaction(self._create_user_tx, user)
+            session.execute_write(self._create_user_tx, user)
         return {"message": "Usuario creado correctamente"}
 
     @staticmethod
@@ -41,7 +41,7 @@ class UserController:
         Obtiene todos los usuarios almacenados en Neo4j.
         """
         with self.driver.session() as session:
-            result = session.read_transaction(self._get_users_tx)
+            result = session.execute_read(self._get_users_tx)
         return result
 
     @staticmethod
@@ -56,7 +56,7 @@ class UserController:
         Elimina un usuario de Neo4j.
         """
         with self.driver.session() as session:
-            session.write_transaction(self._delete_user_tx, user_id)
+            session.execute_write(self._delete_user_tx, user_id)
         return {"message": f"Usuario {user_id} eliminado correctamente"}
 
     @staticmethod
