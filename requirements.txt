@@ -4,3 +4,4 @@ streamlit
 datetime
 unittest
 dotenv
+bcrypt

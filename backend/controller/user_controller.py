@@ -1,4 +1,5 @@
 from neo4j import GraphDatabase
+import bcrypt
 from dotenv import load_dotenv
 import os
 import sys
@@ -19,23 +20,35 @@ class UserController:
     def close(self):
         self.driver.close()
 
+    @staticmethod
+    def _hash_password(password: str) -> str:
+        salt = bcrypt.gensalt()
+        return bcrypt.hashpw(password.encode('utf-8'), salt).decode('utf-8')
+
+    # Método para verificar contraseñas
+    @staticmethod
+    def _verify_password(hashed_password: str, password: str) -> bool:
+        """Verifica una contraseña con su hash"""
+        return bcrypt.checkpw(password.encode('utf-8'), hashed_password.encode('utf-8'))
+
     #Create user
-    def create_user(self, user: User):
+    def create_user(self, user: User, password: str):
         """
         Inserta un usuario en Neo4j.
         """
+        hashed_password = self._hash_password(password)
         with self.driver.session() as session:
-            session.execute_write(self._create_user_tx, user)
+            session.execute_write(self._create_user_tx, user, hashed_password)
         return {"message": "Usuario creado correctamente"}
 
     @staticmethod
-    def _create_user_tx(tx, user: User):
+    def _create_user_tx(tx, user: User, hashed_password=str):
         query = """
-        CREATE (u:User {user_id: $user_id, name: $name, age: $age, favorite_genres: $favorite_genres, favorite_duration: $favorite_duration})
+        CREATE (u:User {user_id: $user_id, name: $name, password: $password, age: $age, favorite_genres: $favorite_genres, favorite_duration: $favorite_duration})
         """
-        tx.run(query, user_id=user.node_id, name=user.name, age=user.age, favorite_genres=user.favorite_genres, favorite_duration=user.favorite_duration)
+        tx.run(query, user_id=user.node_id, name=user.name, password=hashed_password, age=user.age, favorite_genres=user.favorite_genres, favorite_duration=user.favorite_duration)
 
-    #Get user
+    #Get users
     def get_users(self):
         """
         Obtiene todos los usuarios almacenados en Neo4j.
@@ -46,9 +59,53 @@ class UserController:
 
     @staticmethod
     def _get_users_tx(tx):
-        query = "MATCH (u:User) RETURN u"
+        """
+        Consulta para obtener todos los usuarios sin la contraseña.
+        """
+        query = """
+        MATCH (u:User)
+        RETURN u.user_id AS user_id, u.name AS name, u.age AS age, 
+               u.favorite_genres AS favorite_genres, 
+               u.favorite_duration AS favorite_duration
+        """
         result = tx.run(query)
-        return [record["u"] for record in result]
+        return [record.data() for record in result]
+
+    #Get user
+    def get_user_by_credentials(self, name: str, password: str):
+        """
+        Busca un usuario por nombre y verifica su contraseña.
+        """
+        with self.driver.session() as session:
+            user_data = session.execute_read(self._get_user_by_name_tx, name)
+        
+        if user_data and "password" in user_data:
+            if self._verify_password(user_data["password"], password):
+                # Si la contraseña es correcta, devolver los datos sin incluirla
+                return {
+                    "user_id": user_data["user_id"],
+                    "name": user_data["name"],
+                    "age": user_data["age"],
+                    "favorite_genres": user_data["favorite_genres"],
+                    "favorite_duration": user_data["favorite_duration"]
+                }
+        return None  # Si no coincide la contraseña o no se encuentra el usuario
+
+    @staticmethod
+    def _get_user_by_name_tx(tx, name: str):
+        """
+        Busca un usuario por su nombre y obtiene su contraseña hasheada.
+        """
+        query = """
+        MATCH (u:User {name: $name})
+        RETURN u.user_id AS user_id, u.name AS name, u.age AS age, 
+               u.favorite_genres AS favorite_genres, 
+               u.favorite_duration AS favorite_duration,
+               u.password AS password
+        """
+        result = tx.run(query, name=name)
+        return result.single() 
+    
 
     #Delete user
     def delete_user(self, user_id: str):
