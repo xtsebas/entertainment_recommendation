@@ -5,3 +5,4 @@ datetime
 unittest
 dotenv
 bcrypt
+uuid

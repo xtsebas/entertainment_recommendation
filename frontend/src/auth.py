@@ -20,14 +20,19 @@ def login():
             if user_data:
                 st.session_state["authenticated"] = True
                 st.session_state["user"] = user_data
-                st.success(f"Bienvenido {user_data['name']} 🎉")
-                st.experimental_rerun()
+                st.session_state["selected_page"] = "Home"  
+                st.success(f"✅ Bienvenido {user_data['name']} 🎉")
             else:
                 st.error("❌ Credenciales incorrectas. Intenta de nuevo.")
             
             user_controller.close()  # Cerramos la conexión con Neo4j
         else:
             st.warning("⚠️ Por favor, ingresa tus credenciales.")
+    
+    st.markdown("---")
+    st.markdown("¿No tienes una cuenta? [Regístrate aquí](#)", unsafe_allow_html=True)
+    if st.button("Crear una Cuenta"):
+        st.session_state["selected_page"] = "Signup"
 
 def logout():
     """Cierra sesión del usuario."""

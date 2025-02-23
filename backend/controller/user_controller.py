@@ -79,7 +79,7 @@ class UserController:
         with self.driver.session() as session:
             user_data = session.execute_read(self._get_user_by_name_tx, name)
         
-        if user_data and "password" in user_data:
+        if user_data and user_data['password']:
             if self._verify_password(user_data["password"], password):
                 # Si la contraseña es correcta, devolver los datos sin incluirla
                 return {
