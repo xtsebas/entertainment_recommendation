@@ -4,6 +4,7 @@ import sys
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from src.auth import login
 from src.router import show_page
+from src.sidebar import show_sidebar
 from src.session_manager import is_authenticated
 from src.pages.signup import signup 
 
@@ -22,4 +23,5 @@ if st.session_state["selected_page"] == "Signup":
 elif not is_authenticated():
     login()
 else:
+    show_sidebar()
     show_page()
