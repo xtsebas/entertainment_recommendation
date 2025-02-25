@@ -14,7 +14,7 @@ ROUTES = {
     "Signup": signup.signup,
     "Ratings" : ratings.show,
     "Movies" : movies.show,
-    "Series" : series.show
+    "Series" : series.show,
 }
 
 def show_page():
