@@ -8,7 +8,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from controller.belongstoseries_relation_controller import BelongsToSeriesRelationController
 from view.rating import Rating
-from view.series import Series
+from backend.view.serie import Series
 from view.relations.belongstoseries import BelongsToSeriesRelation
 
 class TestBelongsToSeriesRelationController(unittest.TestCase):

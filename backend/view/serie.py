@@ -1,6 +1,6 @@
 from model.node import Node
 
-class Series(Node):
+class Serie(Node):
     def __init__(self, series_id: str, total_episodes: int, total_seasons: int,
                  status: str, release_format: str, show_runner: str):
         super().__init__(series_id, "Series",
