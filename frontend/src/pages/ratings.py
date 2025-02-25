@@ -52,6 +52,8 @@ def show():
 
     # Mostrar contenido basado en la acción seleccionada
     accion = st.session_state.get("crud_action")
+    if accion == None:
+         st.write("Select an operation")
     if accion == "create":
          st.subheader("Crear Rating")
          st.write("Aquí va el formulario para crear un nuevo rating.")
