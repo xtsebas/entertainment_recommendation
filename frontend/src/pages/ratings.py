@@ -29,11 +29,14 @@ def show():
     }
     /* Estilos individuales para cada botón */
     .stButton>button:focus { outline: none; }
-    .create-button { background: linear-gradient(90deg, #4CAF50, #66BB6A); }
-    .read-button   { background: linear-gradient(90deg, #2196F3, #42A5F5); }
-    .update-button { background: linear-gradient(90deg, #FFC107, #FFCA28); }
-    .delete-button { background: linear-gradient(90deg, #F44336, #E57373); }
-    .stButton>button:hover { filter: brightness(90%); }
+    .st-key-create button { background: linear-gradient(90deg, #4CAF50, #66BB6A); }
+    .st-key-read button { background: linear-gradient(90deg, #2196F3, #42A5F5); }
+    .st-key-update button { background: linear-gradient(90deg, #FFC107, #FFCA28); }
+    .st-key-delete button { background: linear-gradient(90deg, #F44336, #E57373); }
+    .stButton>button:hover { 
+    filter: brightness(90%); 
+    color: black;
+    }
     </style>
     """, unsafe_allow_html=True)
 
