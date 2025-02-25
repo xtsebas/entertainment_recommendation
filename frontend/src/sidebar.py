@@ -7,7 +7,7 @@ def show_sidebar():
         
         #to manage nodes (5 total) + 1 media
         st.session_state["selected_page"] = st.radio(
-            "Data", ["Home", "Genres", "Users", "Ratings", "Movies", "Series", "Preferences", "create_rating"]
+            "Data", ["Home", "Genres", "Users", "Ratings", "Movies", "Series", "Preferences"]
         )
         
         #to manage relations (10 total)
