@@ -1,12 +1,81 @@
 import streamlit as st
-from backend.controller.rating_controller import RatingController
-from backend.view.rating import Rating
-# import uuid  
-
-# serieController = SerieController()
+import uuid
+from datetime import date
+from backend.controller.media_controller import MediaController
+from backend.controller.is_a_controller import IS_A_Controller
+from backend.view.media import Media
+from backend.view.serie import Serie
+# Initialize controllers
+seriesController = MediaController()
+is_a_controller = IS_A_Controller()
 
 def show_create_serie():
-    pass
+    st.title("📺 Agregar una Nueva Serie")
+    st.write("Aquí puedes agregar una nueva serie.")
+
+    # ✅ Series Form Inputs
+    title = st.text_input("Título de la Serie", placeholder="Ejemplo: Breaking Bad")
+    total_episodes = st.number_input("Total de Episodios", min_value=1, step=1)
+    total_seasons = st.number_input("Total de Temporadas", min_value=1, step=1)
+    status = st.selectbox("Estado de la Serie", ["En emisión", "Finalizada", "Cancelada"])
+    release_format = st.text_input("Formato de Lanzamiento", placeholder="Ejemplo: TV Show, Streaming, Web Series")
+    show_runner = st.text_input("Showrunner", placeholder="Ejemplo: Vince Gilligan")
+
+    # ✅ Dropdown for Genres
+    possible_genres = ["Acción", "Aventura", "Comedia", "Drama", "Ciencia Ficción", "Terror", "Documental", "Romance"]
+    genres = st.multiselect("Géneros", possible_genres)
+
+    # ✅ Release Date Picker
+    release_date = st.date_input("Fecha de Estreno", min_value=date(1900, 1, 1), max_value=date.today())
+
+    # ✅ Form Validation
+    if st.button("Agregar Serie"):
+        if not title:
+            st.error("❌ El título de la serie no puede estar vacío.")
+        elif total_episodes <= 0:
+            st.error("❌ El número de episodios debe ser mayor a 0.")
+        elif total_seasons <= 0:
+            st.error("❌ El número de temporadas debe ser mayor a 0.")
+        elif not status:
+            st.error("❌ Debes seleccionar el estado de la serie.")
+        elif not release_format:
+            st.error("❌ Debes especificar el formato de lanzamiento.")
+        elif not show_runner:
+            st.error("❌ Debes ingresar el nombre del Showrunner.")
+        elif not genres:
+            st.error("❌ Debes seleccionar al menos un género.")
+        elif not release_date:
+            st.error("❌ Debes seleccionar una fecha de estreno válida.")
+        else:
+            # Generate unique media_id
+            media_id = str(uuid.uuid4())
+
+            # Create Media object
+            media = Media(
+                media_id=media_id,
+                title=title,
+                genres=genres,
+                release_date=release_date,
+                avg_rating=0.0  # Default value for new series
+            )
+
+            # Create Serie Object
+            serie = Serie(
+                total_episodes=total_episodes,
+                total_seasons=total_seasons,
+                status=status,
+                release_format=release_format,
+                show_runner=show_runner
+            )
+            
+            # Step 1: Store Media and Series Nodes in Database
+            seriesController.create_media(media=media, media_type="serie", serie=serie)
+
+            # Create the IS_A Relationship
+            is_a_controller.create_serie_relation(media_id=media_id, serie=serie)
+
+            st.success(f"✅ Serie '{title}' agregada con éxito.")
+
 
 def show_read_serie():
     pass 

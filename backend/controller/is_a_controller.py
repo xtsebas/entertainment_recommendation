@@ -49,25 +49,24 @@ class IS_A_Controller:
             age_classification=movie.age_classification
             )
 
-
-
     # Create IS_A Relationship for Series
-    def create_serie_relation(self, media_id: str, series_id: str):
+    def create_serie_relation(self, media_id: str, serie : Serie):
         """Links Media to Series via IS_A relationship."""
         with self.driver.session() as session:
-            session.execute_write(self._create_serie_relation_tx, media_id, series_id)
+            session.execute_write(self._create_serie_relation_tx, media_id, serie)
 
 
+    @staticmethod
     @staticmethod
     def _create_serie_relation_tx(tx, media_id: str, serie: Serie):
         query = """
         MATCH (med:Media {media_id: $media_id})
         MATCH (s:Media:Serie {
-            total_episodes: $serie.total_episodes,
-            total_seasons: $serie.total_seasons,
-            status: $serie.status,
-            release_format: $serie.release_format,
-            show_runner: $serie.show_runner
+            total_episodes: $total_episodes,
+            total_seasons: $total_seasons,
+            status: $status,
+            release_format: $release_format,
+            show_runner: $show_runner
         })
         MERGE (med)-[:IS_A {
             type: "Serie",
@@ -76,10 +75,10 @@ class IS_A_Controller:
         }]->(s)
         """
         tx.run(query,
-               media_id=media_id, 
-               total_episodes=serie.total_episodes,
-               total_seasons=serie.total_seasons, 
-               status=serie.status, 
-               release_format=serie.release_format, 
-               show_runner=serie.show_runner
-               )
+            media_id=media_id, 
+            total_episodes=serie.total_episodes,
+            total_seasons=serie.total_seasons, 
+            status=serie.status, 
+            release_format=serie.release_format, 
+            show_runner=serie.show_runner
+            )
