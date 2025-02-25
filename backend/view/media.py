@@ -3,11 +3,14 @@ from model.node import Node
 
 class Media(Node):
     def __init__(self, media_id: str, title: str, genres: list, release_date: date, avg_rating: float):
-        super().__init__(media_id, "Media",
-                         title=title,
-                         genres=genres,
-                         release_date=release_date,
-                         avg_rating=avg_rating)
+        super().__init__(media_id, "Media") 
+        self.media_id = media_id 
+        self.properties = {
+            "title": title,
+            "genres": genres,
+            "release_date": release_date,
+            "avg_rating": avg_rating
+        }
 
     @property
     def title(self) -> str:

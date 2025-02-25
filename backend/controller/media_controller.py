@@ -4,7 +4,8 @@ import os
 import sys
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from view.media import Media
-
+from view.movie import Movie
+from view.serie import Serie
 load_dotenv()
 
 class MediaController:
@@ -18,15 +19,18 @@ class MediaController:
         """Closes the database connection."""
         self.driver.close()
 
-    #Create Media
-    def create_media(self, media: Media):
-        """Creates a new Media node in the database."""
+    
+    def create_media(self, media: Media, media_type: str, movie: Movie = None, serie : Serie = None):
+        """Creates a Media node and links it to a Media:Movie or Media:Serie node."""
         with self.driver.session() as session:
-            session.execute_write(self._create_media_tx, media)
+            session.execute_write(self._create_media_tx, media, media_type, movie, serie )
 
     @staticmethod
-    def _create_media_tx(tx, media: Media):
-        query = """
+    def _create_media_tx(tx, media: Media, media_type: str, movie: Movie = None, serie : Serie = None ):
+        """Handles creation of Media, Media:Movie or Media:Serie, and IS_A relation."""
+        
+        # Step 1: Create Media Node
+        query_media = """
         CREATE (med:Media {
             media_id: $media_id,
             title: $title,
@@ -36,14 +40,54 @@ class MediaController:
         })
         """
         tx.run(
-            query,
-            media_id=media.node_id,
+            query_media,
+            media_id=media.media_id,
             title=media.title,
             genres=media.genres,
             release_date=media.release_date.isoformat(),
             avg_rating=media.avg_rating
         )
 
+        if media_type.lower() == "movie":
+            #  Step 2: Create Media:Movie Node
+            query_movie = """
+            CREATE (m:Media:Movie {
+                duration: $duration,
+                budget: $budget,
+                revenue: $revenue,
+                nominations: $nominations,
+                age_classification: $age_classification
+            })
+            """
+            tx.run(
+                query_movie,
+                duration=movie.duration,
+                budget=movie.budget,
+                revenue=movie.revenue,
+                nominations=movie.nominations,
+                age_classification=movie.age_classification
+            )
+
+        elif media_type.lower() == "serie":
+            # ✅ Step 2: Create Media:Series Node
+            query_series = """
+            CREATE (s:Media:Serie {
+                total_episodes: $total_episodes,
+                total_seasons: $total_seasons,
+                status: $status,
+                release_format: $release_format,
+                show_runner: $show_runner
+            })
+            """
+            tx.run(
+                query_series,
+                total_episodes=serie.total_episodes,
+                total_seasons=serie.total_seasons,
+                status=serie.status,
+                release_format=serie.release_format,
+                show_runner=serie.show_runner
+            )
+                
     #Get All Media
     def get_all_media(self):
         """Retrieves all Media nodes."""
@@ -75,7 +119,7 @@ class MediaController:
     def _get_all_labeled_media_tx(tx):
         query = """
         MATCH (med:Media)
-        WHERE med:Movie OR med:Series
+        WHERE med:Movie OR med:Serie
         RETURN med.media_id AS media_id,
                med.title AS title,
                labels(med) AS labels,
