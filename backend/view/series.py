@@ -1,37 +1,51 @@
 from model.node import Node
 
 class Series(Node):
-    def __init__(self, series_id: str, title: str, score: float, description: str, on_air: bool):
-        super().__init__(series_id, "Series", title=title, score=score, description=description, on_air=on_air)
+    def __init__(self, series_id: str, total_episodes: int, total_seasons: int,
+                 status: str, release_format: str, show_runner: str):
+        super().__init__(series_id, "Series",
+                         total_episodes=total_episodes,
+                         total_seasons=total_seasons,
+                         status=status,
+                         release_format=release_format,
+                         show_runner=show_runner)
 
     @property
-    def title(self) -> str:
-        return self.properties.get("title")
-    
-    @title.setter
-    def title(self, value: str):
-        self.properties["title"] = value
+    def total_episodes(self) -> int:
+        return self.properties.get("total_episodes")
+
+    @total_episodes.setter
+    def total_episodes(self, value: int):
+        self.properties["total_episodes"] = value
 
     @property
-    def score(self) -> float:
-        return self.properties.get("score")
-    
-    @score.setter
-    def score(self, value: float):
-        self.properties["score"] = value
+    def total_seasons(self) -> int:
+        return self.properties.get("total_seasons")
+
+    @total_seasons.setter
+    def total_seasons(self, value: int):
+        self.properties["total_seasons"] = value
 
     @property
-    def description(self) -> str:
-        return self.properties.get("description")
-    
-    @description.setter
-    def description(self, value: str):
-        self.properties["description"] = value
+    def status(self) -> str:
+        return self.properties.get("status")
+
+    @status.setter
+    def status(self, value: str):
+        self.properties["status"] = value
 
     @property
-    def on_air(self) -> bool:
-        return self.properties.get("on_air")
-    
-    @on_air.setter
-    def on_air(self, value: bool):
-        self.properties["on_air"] = value
+    def release_format(self) -> str:
+        return self.properties.get("release_format")
+
+    @release_format.setter
+    def release_format(self, value: str):
+        self.properties["release_format"] = value
+
+    @property
+    def show_runner(self) -> str:
+        return self.properties.get("show_runner")
+
+    @show_runner.setter
+    def show_runner(self, value: str):
+        self.properties["show_runner"] = value

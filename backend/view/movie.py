@@ -1,37 +1,51 @@
 from model.node import Node
 
 class Movie(Node):
-    def __init__(self, movie_id: str, title: str, score: float, description: str, released: bool):
-        super().__init__(movie_id, "Movie", title=title, score=score, description=description, released=released)
+    def __init__(self, movie_id: str, duration: int, budget: float, revenue: float,
+                 nominations: list, age_classification: str):
+        super().__init__(movie_id, "Movie",
+                         duration=duration,
+                         budget=budget,
+                         revenue=revenue,
+                         nominations=nominations,
+                         age_classification=age_classification)
 
     @property
-    def title(self) -> str:
-        return self.properties.get("title")
-    
-    @title.setter
-    def title(self, value: str):
-        self.properties["title"] = value
+    def duration(self) -> int:
+        return self.properties.get("duration")
+
+    @duration.setter
+    def duration(self, value: int):
+        self.properties["duration"] = value
 
     @property
-    def score(self) -> float:
-        return self.properties.get("score")
-    
-    @score.setter
-    def score(self, value: float):
-        self.properties["score"] = value
+    def budget(self) -> float:
+        return self.properties.get("budget")
+
+    @budget.setter
+    def budget(self, value: float):
+        self.properties["budget"] = value
 
     @property
-    def description(self) -> str:
-        return self.properties.get("description")
-    
-    @description.setter
-    def description(self, value: str):
-        self.properties["description"] = value
+    def revenue(self) -> float:
+        return self.properties.get("revenue")
+
+    @revenue.setter
+    def revenue(self, value: float):
+        self.properties["revenue"] = value
 
     @property
-    def released(self) -> bool:
-        return self.properties.get("released")
-    
-    @released.setter
-    def released(self, value: bool):
-        self.properties["released"] = value
+    def nominations(self) -> list:
+        return self.properties.get("nominations")
+
+    @nominations.setter
+    def nominations(self, value: list):
+        self.properties["nominations"] = value
+
+    @property
+    def age_classification(self) -> str:
+        return self.properties.get("age_classification")
+
+    @age_classification.setter
+    def age_classification(self, value: str):
+        self.properties["age_classification"] = value
