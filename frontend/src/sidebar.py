@@ -9,7 +9,3 @@ def show_sidebar():
         st.session_state["selected_page"] = st.radio(
             "Data", ["Home", "Genres", "Users", "Ratings", "Movies", "Series", "Preferences"]
         )
-        
-        #to manage relations (10 total)
-        
-    

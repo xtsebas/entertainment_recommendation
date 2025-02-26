@@ -68,7 +68,7 @@ def select_user():
 
     <div class="card-client">
         <div class="user-picture">
-            <img src="https://via.placeholder.com/100" alt="User Picture" style="border-radius: 50%; width: 100%;">
+            <img src="https://www.w3schools.com/howto/img_avatar.png" alt="User Picture" style="border-radius: 50%; width: 100%;">
         </div>
         <p class="name-client">{selected_user['name']}<br>
             <span>Edad: {selected_user['age']}</span>
@@ -82,11 +82,15 @@ def select_user():
 
     with col1:
         if st.button("⬅️ Anterior", key="prev_user") and selected_index > 0:
-            st.session_state["selected_user_index"] -= 1
+            if selected_index > 0:
+                st.session_state["selected_user_index"] -= 1
+            st.rerun() 
 
     with col3:
         if st.button("Siguiente ➡️", key="next_user") and selected_index < len(users) - 1:
-            st.session_state["selected_user_index"] += 1
+            if selected_index < len(users) - 1:
+                st.session_state["selected_user_index"] += 1
+            st.rerun() 
 
     # Botón para seleccionar el usuario y entrar en la app
     st.markdown("<br>", unsafe_allow_html=True)
@@ -94,3 +98,4 @@ def select_user():
         st.session_state["authenticated"] = True
         st.session_state["user"] = selected_user  # Guardar datos del usuario seleccionado
         st.session_state["selected_page"] = "Home"  # Ir a Home
+        st.rerun() 
