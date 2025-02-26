@@ -2,7 +2,8 @@ import streamlit as st
 import os
 import sys
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from backend.controller.user_controller import UserController  # Importamos el controlador de usuarios
+from backend.controller.user_controller import UserController  
+from frontend.src.utils.user_crud.user_crud import show_create_user
 
 def select_user():
     """ Muestra una lista de usuarios en forma de tarjetas y permite seleccionarlos para ingresar. """
@@ -99,3 +100,14 @@ def select_user():
         st.session_state["user"] = selected_user  # Guardar datos del usuario seleccionado
         st.session_state["selected_page"] = "Home"  # Ir a Home
         st.rerun() 
+
+    st.markdown("---")
+    if st.button("🆕 Crear Usuario", key="create_user"):
+        st.session_state["crud_action"] = "create"
+    
+    accion = st.session_state.get("crud_action")
+
+    if accion == "create":
+        st.subheader("Crear Rating")
+        st.write("Aquí va el formulario para crear un nuevo rating.")
+        show_create_user()
