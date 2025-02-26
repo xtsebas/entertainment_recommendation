@@ -2,7 +2,7 @@ from typing import List
 from model.node import Node
 
 class User(Node):
-    def __init__(self, user_id: str, name: str, password:str, age: int, favorite_genres: List[str], favorite_duration: int):
+    def __init__(self, user_id: str, name: str, age: int, favorite_genres: List[str], favorite_duration: int):
         super().__init__(user_id, "User", name=name, age=age, favorite_genres=favorite_genres, favorite_duration=favorite_duration)
 
     @property
@@ -12,14 +12,6 @@ class User(Node):
     @name.setter
     def name(self, value: str):
         self.properties['name'] = value
-
-    @property
-    def password(self):
-        return self.properties['password']
-    
-    @password.setter
-    def password(self, value: str):
-        self.properties['password'] = value
     
     @property
     def age(self):

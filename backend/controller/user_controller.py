@@ -20,33 +20,21 @@ class UserController:
     def close(self):
         self.driver.close()
 
-    @staticmethod
-    def _hash_password(password: str) -> str:
-        salt = bcrypt.gensalt()
-        return bcrypt.hashpw(password.encode('utf-8'), salt).decode('utf-8')
-
-    # Método para verificar contraseñas
-    @staticmethod
-    def _verify_password(hashed_password: str, password: str) -> bool:
-        """Verifica una contraseña con su hash"""
-        return bcrypt.checkpw(password.encode('utf-8'), hashed_password.encode('utf-8'))
-
     #Create user
-    def create_user(self, user: User, password: str):
+    def create_user(self, user: User):
         """
         Inserta un usuario en Neo4j.
         """
-        hashed_password = self._hash_password(password)
         with self.driver.session() as session:
-            session.execute_write(self._create_user_tx, user, hashed_password)
+            session.execute_write(self._create_user_tx, user)
         return {"message": "Usuario creado correctamente"}
 
     @staticmethod
-    def _create_user_tx(tx, user: User, hashed_password=str):
+    def _create_user_tx(tx, user: User):
         query = """
-        CREATE (u:User {user_id: $user_id, name: $name, password: $password, age: $age, favorite_genres: $favorite_genres, favorite_duration: $favorite_duration})
+        CREATE (u:User {user_id: $user_id, name: $name, age: $age, favorite_genres: $favorite_genres, favorite_duration: $favorite_duration})
         """
-        tx.run(query, user_id=user.node_id, name=user.name, password=hashed_password, age=user.age, favorite_genres=user.favorite_genres, favorite_duration=user.favorite_duration)
+        tx.run(query, user_id=user.node_id, name=user.name, age=user.age, favorite_genres=user.favorite_genres, favorite_duration=user.favorite_duration)
 
     #Get users
     def get_users(self):
@@ -72,15 +60,14 @@ class UserController:
         return [record.data() for record in result]
 
     #Get user
-    def get_user_by_credentials(self, name: str, password: str):
+    def get_user_by_credentials(self, name: str):
         """
         Busca un usuario por nombre y verifica su contraseña.
         """
         with self.driver.session() as session:
             user_data = session.execute_read(self._get_user_by_name_tx, name)
         
-        if user_data and user_data['password']:
-            if self._verify_password(user_data["password"], password):
+        if user_data:
                 # Si la contraseña es correcta, devolver los datos sin incluirla
                 return {
                     "user_id": user_data["user_id"],
