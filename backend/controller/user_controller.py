@@ -1,6 +1,7 @@
 from neo4j import GraphDatabase
 import bcrypt
 from dotenv import load_dotenv
+import uuid
 import os
 import sys
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
@@ -35,11 +36,12 @@ class UserController:
     @staticmethod
     def _create_user_tx(tx, name: str, age: int, favorite_genres: str, favorite_duration: int):
         query = """
-        CREATE (u:User {name: $name, age: $age, favorite_genres: $favorite_genres, favorite_duration: $favorite_duration})
-        RETURN u.node_id AS id, u.name AS name, u.age AS age, u.favorite_genres AS favorite_genres, u.favorite_duration AS favorite_duration
+        CREATE (u:User {user_id: $user_id, name: $name, age: $age, favorite_genres: $favorite_genres, favorite_duration: $favorite_duration})
+        RETURN u.user_id AS id, u.name AS name, u.age AS age, u.favorite_genres AS favorite_genres, u.favorite_duration AS favorite_duration
         """
         result = tx.run(
             query,
+            user_id=str(uuid.uuid4()),
             name=name,
             age=age,
             favorite_genres=favorite_genres,

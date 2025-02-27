@@ -19,15 +19,16 @@ class LikesRelationController:
         self.driver.close()
 
     # Crear relación LIKE
-    def create_likes_relation(self, nameUser: str, name: str, preference_level: int, aggregation_date: date, last_engagement: date):
-        """Crea la relación LIKES entre un usuario y un género."""
+    def create_likes_relation(self, user_id: str, genre_id: str, preference_level: int, aggregation_date: date, last_engagement: date):
+        """Crea la relación LIKES entre un usuario y un género usando IDs."""
         with self.driver.session() as session:
-            session.execute_write(self._create_likes_tx, nameUser, name, preference_level, aggregation_date, last_engagement)
+            session.execute_write(self._create_likes_tx, user_id, genre_id, preference_level, aggregation_date, last_engagement)
 
     @staticmethod
-    def _create_likes_tx(tx, nameUser: str, name: str, preference_level: int, aggregation_date: date, last_engagement: date):
+    def _create_likes_tx(tx, user_id: str, genre_id: str, preference_level: int, aggregation_date: date, last_engagement: date):
         query = """
-        MATCH (u:User {name: $nameUser}), (g:Genre {name: $name})
+        MATCH (u:User {user_id: $user_id})
+        MATCH (g:Genre {genre_id: $genre_id}) 
         MERGE (u)-[r:LIKES]->(g)
         SET r.preference_level = $preference_level,
             r.aggregation_date = $aggregation_date,
@@ -36,11 +37,11 @@ class LikesRelationController:
         """
         tx.run(
             query,
-            nameUser=nameUser,
-            name=name,
+            user_id=user_id,
+            genre_id=genre_id,
             preference_level=preference_level,
-            aggregation_date=aggregation_date,
-            last_engagement=last_engagement
+            aggregation_date=aggregation_date.isoformat(),
+            last_engagement=last_engagement.isoformat()
         )
         
     # Obtener todas las relaciones LIKE de un usuario

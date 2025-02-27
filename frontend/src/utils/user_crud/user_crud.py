@@ -51,19 +51,24 @@ def show_create_user():
             userCreate = user_controller.create_user(user)
 
             if userCreate:  
-                neo4j_user_id = userCreate['name']  # Usamos el ID asignado por Neo4j
+                neo4j_user_id = userCreate['id']  # Usamos el ID asignado por Neo4j
                 
                 today = date.today()
                 likes_controller = LikesRelationController() 
                 for genre_name in favorite_genres:
-                    
-                    likes_controller.create_likes_relation(
-                        nameUser=neo4j_user_id,  
-                        name=genre_name,
-                        preference_level=5,  
-                        aggregation_date=today,  
-                        last_engagement=today  
-                    )
+                    genre_id = genre_names.get(genre_name)
+
+                    if genre_id:  
+                        likes_controller.create_likes_relation(
+                            user_id=neo4j_user_id,  
+                            genre_id=genre_id,  
+                            preference_level=5,  
+                            aggregation_date=today,  
+                            last_engagement=today  
+                        )
+                        print(f"✅ Creando relación LIKES con: user_id={neo4j_user_id}, genre_id={genre_id}")
+                    else:
+                        print(f"⚠️ No se encontró el ID para el género '{genre_name}', no se creará la relación.")
                 
                 likes_controller.close()  
 

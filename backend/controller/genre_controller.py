@@ -63,7 +63,7 @@ class GenreController:
     def _get_all_genres_tx(tx):
         query = """
         MATCH (g:Genre)
-        RETURN g.node_id AS id, g.name AS name, g.avg AS avg, g.description AS description, g.popular AS popular
+        RETURN g.genre_id AS id, g.name AS name, g.avg AS avg, g.description AS description, g.popular AS popular
         ORDER BY g.name
         """
         result = tx.run(query)
