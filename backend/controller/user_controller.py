@@ -159,7 +159,7 @@ class UserController:
         }
         RETURN 
             med.media_id AS media_id, 
-            med.title AS movie_title,
+            med.title AS media_title,
             m.revenue AS revenue,
             m.budget AS budget,
             m.duration AS duration,
@@ -210,7 +210,7 @@ class UserController:
         }
         RETURN 
             med.media_id AS media_id, 
-            med.title AS serie_title,
+            med.title AS media_title,
             m.total_episodes AS total_episodes,
             m.total_seasons AS total_seasons,
             m.show_runner AS show_runner,
