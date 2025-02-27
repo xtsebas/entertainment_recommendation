@@ -37,7 +37,7 @@ class TestGenreController(unittest.TestCase):
     # Prueba de Creación
     def test_create_genre(self):
         """Verifica que se pueda crear un género en Neo4j."""
-        genre = self.controller.get_genre(self.test_genre_id)
+        genre = self.controller.create_genre(self.test_genre)
         self.assertIsNotNone(genre, "El género no fue creado correctamente.")
         self.assertEqual(genre["name"], "Test Genre")
         self.assertEqual(genre["description"], "This is a test genre")
@@ -52,7 +52,6 @@ class TestGenreController(unittest.TestCase):
         self.assertEqual(genre["id"], self.test_genre_id)
 
     # Prueba de Obtener Todos los Géneros
-    @unittest.skip("Depende de que hayan mas de un genero")
     def test_get_all_genres(self):
         """Verifica que se puedan obtener todos los géneros."""
         genres = self.controller.get_all_genres()

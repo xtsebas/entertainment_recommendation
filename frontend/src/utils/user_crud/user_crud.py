@@ -2,9 +2,11 @@ import streamlit as st
 import uuid
 import os
 import sys
+from datetime import date
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from backend.controller.user_controller import UserController
 from backend.controller.genre_controller import GenreController
+from backend.controller.likes_relation_controller import LikesRelationController
 from backend.view.user import User
 
 def show_create_user():
@@ -26,11 +28,11 @@ def show_create_user():
 
     # Campos del formulario
     name = st.text_input("Nombre de usuario")
-    age = st.number_input("Edad", min_value=10, max_value=100, step=1)
+    age = st.number_input("Edad", min_value=18, max_value=100, step=1)
 
     # Mostrar los géneros disponibles como opciones seleccionables
-    genre_names = [genre["name"] for genre in genres]
-    favorite_genres = st.multiselect("Selecciona tus géneros favoritos", genre_names)
+    genre_names = {genre["name"]: genre["id"] for genre in genres}  # Mapeo de nombre a ID
+    favorite_genres = st.multiselect("Selecciona tus géneros favoritos", list(genre_names.keys()))
 
     favorite_duration = st.number_input("Duración favorita (minutos)", min_value=30, max_value=300, step=10)
     
@@ -39,21 +41,40 @@ def show_create_user():
         if not name or not favorite_genres:
             st.error("⚠️ El nombre y los géneros favoritos son obligatorios.")
         else:
-            user_id = str(uuid.uuid4())  # Generar un ID único
             user = User(
-                node_id=user_id,
                 name=name,
                 age=age,
                 favorite_genres=",".join(favorite_genres),  # Guardar géneros como string separado por comas
                 favorite_duration=favorite_duration
             )
             
-            user_controller.create_user(user)
-            st.success(f"🎉 Usuario {name} creado con éxito!")
-            st.session_state["authenticated"] = True
-            st.session_state["user"] = user  # Guardar el usuario en la sesión
-            st.session_state["selected_page"] = "Home"
-            st.rerun()
+            userCreate = user_controller.create_user(user)
+
+            if userCreate:  
+                neo4j_user_id = userCreate['name']  # Usamos el ID asignado por Neo4j
+                
+                today = date.today()
+                likes_controller = LikesRelationController() 
+                for genre_name in favorite_genres:
+                    
+                    likes_controller.create_likes_relation(
+                        nameUser=neo4j_user_id,  
+                        name=genre_name,
+                        preference_level=5,  
+                        aggregation_date=today,  
+                        last_engagement=today  
+                    )
+                
+                likes_controller.close()  
+
+                
+                st.success(f"🎉 Usuario {name} creado con éxito! ID Neo4j: {neo4j_user_id}")
+                st.session_state["authenticated"] = True
+                st.session_state["user"] = userCreate  # Guardar el usuario en la sesión con el ID correcto
+                st.session_state["selected_page"] = "Home"
+                st.rerun()
+            else:
+                st.error("⚠️ Error al crear el usuario.")
 
     user_controller.close()
 

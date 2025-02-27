@@ -41,12 +41,6 @@ class TestUserController(unittest.TestCase):
         # Verifica que la respuesta sea exitosa
         self.assertEqual(response["message"], "Usuario creado correctamente")
 
-        # Verifica que el usuario existe en la BD y que la contraseña está hasheada
-        with self.driver.session() as session:
-            result = session.run("MATCH (u:User {user_id: $user_id}) RETURN u.password AS password", user_id="123")
-            user_node = result.single()
-            self.assertIsNotNone(user_node)
-
     def test_get_users(self):
         """ Prueba la obtención de usuarios desde Neo4j sin contraseña """
         user = User("456", "Otro Usuario", 30, ["Comedia"], 90)

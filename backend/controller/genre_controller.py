@@ -23,7 +23,8 @@ class GenreController:
         with self.driver.session() as session:
             session.execute_write(self._create_genre_tx, genre)
             # Actualizar estadísticas después de crearlo
-            self.update_genre_stats(genre.node_id)
+            result = session.execute_read(self._get_genre_tx, genre.node_id)
+            return result 
 
     @staticmethod
     def _create_genre_tx(tx, genre: Genre):
@@ -38,23 +39,25 @@ class GenreController:
         """Obtiene un género por su ID."""
         with self.driver.session() as session:
             result = session.execute_read(self._get_genre_tx, genre_id)
-            return result
+        return result
         
     @staticmethod
-    def _get_all_genres_tx(tx):
+    def _get_genre_tx(tx, genre_id: str):
         query = """
-        MATCH (g:Genre)
-        RETURN g.name AS name, g.avg AS avg, g.description AS description, g.popular AS popular
-        ORDER BY g.name
+        MATCH (g:Genre {node_id: $genre_id})
+        RETURN g.node_id AS id, g.name AS name, g.avg AS avg, g.description AS description, g.popular AS popular
         """
-        result = tx.run(query)
-        return [record.data() for record in result] 
+        result = tx.run(query, genre_id=genre_id)
+        return result.single()
     
+    #gGet all genres
     def get_all_genres(self):
         """Obtiene todos los géneros en la base de datos y devuelve una lista de diccionarios."""
         with self.driver.session() as session:
-            result= session.execute_read(self._get_all_genres_tx)
-            return result
+            result = session.execute_read(self._get_all_genres_tx)
+            genres = [record for record in result]  
+        return genres
+
 
     @staticmethod
     def _get_all_genres_tx(tx):
@@ -63,7 +66,8 @@ class GenreController:
         RETURN g.node_id AS id, g.name AS name, g.avg AS avg, g.description AS description, g.popular AS popular
         ORDER BY g.name
         """
-        return tx.run(query)
+        result = tx.run(query)
+        return [record.data() for record in result]  
 
     #Updated genre
     def update_genre(self, genre: Genre):

@@ -26,15 +26,26 @@ class UserController:
         Inserta un usuario en Neo4j.
         """
         with self.driver.session() as session:
-            session.execute_write(self._create_user_tx, user)
-        return {"message": "Usuario creado correctamente"}
-
+            result = session.execute_write(
+                self._create_user_tx, 
+                user.name, user.age, user.favorite_genres, user.favorite_duration
+            )
+        return result
+    
     @staticmethod
-    def _create_user_tx(tx, user: User):
+    def _create_user_tx(tx, name: str, age: int, favorite_genres: str, favorite_duration: int):
         query = """
-        CREATE (u:User {user_id: $user_id, name: $name, age: $age, favorite_genres: $favorite_genres, favorite_duration: $favorite_duration})
+        CREATE (u:User {name: $name, age: $age, favorite_genres: $favorite_genres, favorite_duration: $favorite_duration})
+        RETURN u.node_id AS id, u.name AS name, u.age AS age, u.favorite_genres AS favorite_genres, u.favorite_duration AS favorite_duration
         """
-        tx.run(query, user_id=user.node_id, name=user.name, age=user.age, favorite_genres=user.favorite_genres, favorite_duration=user.favorite_duration)
+        result = tx.run(
+            query,
+            name=name,
+            age=age,
+            favorite_genres=favorite_genres,
+            favorite_duration=favorite_duration
+        )
+        return result.single()
 
     #Get users
     def get_users(self):

@@ -1,9 +1,10 @@
 from model.node import Node
+from datetime import date
 from model.relation import Relation
 from datetime import datetime
 
 class LikesRelation(Relation):
-    def __init__(self, user: Node, genre: Node, preference_level: int, aggregation_date=None, last_engagement=None):
+    def __init__(self, user: Node, genre: Node, preference_level: int, aggregation_date=date, last_engagement=date):
         aggregation_date = aggregation_date or datetime.now().strftime('%Y-%m-%d')
         last_engagement = last_engagement or datetime.now().strftime('%Y-%m-%d')
 

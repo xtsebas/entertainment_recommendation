@@ -1,9 +1,9 @@
 from neo4j import GraphDatabase
 from dotenv import load_dotenv
+from datetime import date
 import os
 import sys
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from view.relations.likes import LikesRelation
 
 load_dotenv()
 
@@ -19,29 +19,30 @@ class LikesRelationController:
         self.driver.close()
 
     # Crear relación LIKE
-    def create_likes_relation(self, relation: LikesRelation):
+    def create_likes_relation(self, nameUser: str, name: str, preference_level: int, aggregation_date: date, last_engagement: date):
+        """Crea la relación LIKES entre un usuario y un género."""
         with self.driver.session() as session:
-            session.execute_write(self._create_likes_tx, relation)
+            session.execute_write(self._create_likes_tx, nameUser, name, preference_level, aggregation_date, last_engagement)
 
     @staticmethod
-    def _create_likes_tx(tx, relation: LikesRelation):
+    def _create_likes_tx(tx, nameUser: str, name: str, preference_level: int, aggregation_date: date, last_engagement: date):
         query = """
-        MATCH (u:User {node_id: $user_id}), (g:Genre {node_id: $genre_id})
+        MATCH (u:User {name: $nameUser}), (g:Genre {name: $name})
         MERGE (u)-[r:LIKES]->(g)
         SET r.preference_level = $preference_level,
-            r.aggregation_date = date($aggregation_date),
-            r.last_engagement = date($last_engagement)
+            r.aggregation_date = $aggregation_date,
+            r.last_engagement = $last_engagement
         RETURN r
         """
         tx.run(
             query,
-            user_id=relation.start_node.node_id,
-            genre_id=relation.end_node.node_id,
-            preference_level=relation.properties['preference_level'],
-            aggregation_date=relation.properties['aggregation_date'],
-            last_engagement=relation.properties['last_engagement']
+            nameUser=nameUser,
+            name=name,
+            preference_level=preference_level,
+            aggregation_date=aggregation_date,
+            last_engagement=last_engagement
         )
-
+        
     # Obtener todas las relaciones LIKE de un usuario
     def get_likes_by_user(self, user_id: str):
         with self.driver.session() as session:
