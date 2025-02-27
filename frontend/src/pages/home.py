@@ -75,7 +75,7 @@ def show_create_rating(current_media):
 
 def show():
     user = st.session_state["user"]
-    user_id = user["user_id"] 
+    user_id = user["id"] 
     st.title("🎬 Entertainment Recommendation")
     st.write(f"Bienvenido {user['name']} al sistema de recomendación de entretenimiento.")
     st.markdown("---")
