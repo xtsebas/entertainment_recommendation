@@ -30,47 +30,47 @@ def format_date(date_value):
         print(f"⚠️ Error al formatear fecha: {e}")
         return "Unknown Date"
 
-def show_create_rating(current_media):
-    """Form for submitting a rating with validation."""
+# def show_create_rating(current_media):
+#     """Form for submitting a rating with validation."""
     
-    if not st.session_state.get("show_rating", False):
-        return  # No mostrar si el usuario no presionó "✅ Ya la vi"
+#     if not st.session_state.get("show_rating", False):
+#         return  # No mostrar si el usuario no presionó "✅ Ya la vi"
 
-    st.markdown(f"### 🎬 Rate: {current_media.get('media_title', 'Unknown')}")
+#     st.markdown(f"### 🎬 Rate: {current_media.get('media_title', 'Unknown')}")
 
-    rating = st.slider("Rating (0 to 5 Stars)", min_value=0, max_value=5, step=1)
-    comment = st.text_area("Comment", placeholder="Write your feedback here...")
-    final_feeling_options = ["Very Good", "Good", "Neutral", "Bad", "Very Bad"]
-    final_feeling = st.selectbox("Final Feeling", final_feeling_options)
-    recommend = st.checkbox("Would you recommend this?", value=False)
+#     rating = st.slider("Rating (0 to 5 Stars)", min_value=0, max_value=5, step=1)
+#     comment = st.text_area("Comment", placeholder="Write your feedback here...")
+#     final_feeling_options = ["Very Good", "Good", "Neutral", "Bad", "Very Bad"]
+#     final_feeling = st.selectbox("Final Feeling", final_feeling_options)
+#     recommend = st.checkbox("Would you recommend this?", value=False)
 
-    if st.button("Submit Rating"):
-        if rating is None:
-            st.error("Please provide a rating.")
-        elif comment.strip() == "":
-            st.error("Comment cannot be empty.")
-        else:
-            rating_id = str(uuid.uuid4())
-            new_rating = Rating(
-                rating_id=rating_id,
-                rating=rating,
-                comment=comment,
-                final_feeling=final_feeling,
-                recommend=recommend
-            )
+#     if st.button("Submit Rating"):
+#         if rating is None:
+#             st.error("Please provide a rating.")
+#         elif comment.strip() == "":
+#             st.error("Comment cannot be empty.")
+#         else:
+#             rating_id = str(uuid.uuid4())
+#             new_rating = Rating(
+#                 rating_id=rating_id,
+#                 rating=rating,
+#                 comment=comment,
+#                 final_feeling=final_feeling,
+#                 recommend=recommend
+#             )
 
-            ratingController.create_rating(new_rating)
+#             ratingController.create_rating(new_rating)
 
-            st.success("Rating submitted successfully! ✅")
+#             st.success("Rating submitted successfully! ✅")
 
-            # 🔹 Solo después de calificar, cambiar a la siguiente película/serie
-            if st.session_state.active_tab == "Películas":
-                st.session_state.movie_index = (st.session_state.movie_index + 1) % len(st.session_state["movies"])
-            else:
-                st.session_state.series_index = (st.session_state.series_index + 1) % len(st.session_state["series"])
+#             # 🔹 Solo después de calificar, cambiar a la siguiente película/serie
+#             if st.session_state.active_tab == "Películas":
+#                 st.session_state.movie_index = (st.session_state.movie_index + 1) % len(st.session_state["movies"])
+#             else:
+#                 st.session_state.series_index = (st.session_state.series_index + 1) % len(st.session_state["series"])
 
-            st.session_state["show_rating"] = False  # 🔹 Ocultar el formulario de rating
-            st.rerun()
+#             st.session_state["show_rating"] = False  # 🔹 Ocultar el formulario de rating
+#             st.rerun()
 
 
 def show():
@@ -79,16 +79,29 @@ def show():
     st.title("🎬 Entertainment Recommendation")
     st.write(f"Bienvenido {user['name']} al sistema de recomendación de entretenimiento.")
     st.markdown("---")
+    
 
     user_controller = UserController()
     # Obtener contenido desde la BD
-    movies = user_controller.get_movies_not_rated_by_user(user_id, 10)
-    series = user_controller.get_series_not_rated_by_user(user_id, 10)
-
     if "movies" not in st.session_state:
-        st.session_state["movies"] = movies
+        st.session_state["movies"] = user_controller.get_movies_not_rated_by_user(user_id, 10)
     if "series" not in st.session_state:
-        st.session_state["series"] = series
+        st.session_state["series"] = user_controller.get_series_not_rated_by_user(user_id, 10)
+
+    # Now, assign the data from session_state to local variables.
+    movies = st.session_state["movies"]
+    series = st.session_state["series"]
+    
+    
+    print("FETCHING DATAAAAA")
+    print(series)
+    print(movies)
+    
+
+    # if "movies" not in st.session_state:
+    #     st.session_state["movies"] = movies
+    # if "series" not in st.session_state:
+    #     st.session_state["series"] = series
 
     if "movie_index" not in st.session_state:
         st.session_state.movie_index = 0
@@ -229,19 +242,29 @@ def show():
     col1, col2 = st.columns([1, 1])
     with col2:
         if st.button("✅ Ya la vi"):
-            st.session_state["show_rating"] = True 
+            if st.session_state.active_tab == "Películas":
+                rate(media_type="Movie")
+                st.session_state.movie_index = (st.session_state.movie_index + 1) % len(movies)
+            else:                
+                rate(media_type="Movie")
+                st.session_state.series_index = (st.session_state.series_index + 1) % len(series)
+            # st.session_state["show_rating"] = True
 
     with col1:
         if st.button("❌ No la he visto", key="skip"):
-            st.session_state["show_rating"] = False 
+            # st.session_state["show_rating"] = False 
             if st.session_state.active_tab == "Películas":
                 st.session_state.movie_index = (st.session_state.movie_index + 1) % len(movies)
             else:
                 st.session_state.series_index = (st.session_state.series_index + 1) % len(series)
 
-    show_create_rating(current_media)
-             
-            
+    # show_create_rating(current_media)
     st.markdown('</div>', unsafe_allow_html=True)
     user_controller.close()
 
+@st.dialog("Sube tu rating")
+def rate(media_type: str):
+    st.write(f"Califica este contenido")
+    reason = st.text_input("Because...")
+    if st.button("Submit"):
+        st.rerun()
