@@ -52,18 +52,31 @@ class SimilarToRelationController:
         tx.run(query, user_id=user_id)
 
     # Obtener usuarios similares con puntajes cercanos a 1
-    def get_similar_users(self, user_id: str):
+    def get_similar_users(self, user_id: str, min_score: float):
         with self.driver.session() as session:
-            return session.execute_read(self._get_similar_users_tx, user_id)
+            return session.execute_read(self._get_similar_users_tx, user_id, min_score)
 
     @staticmethod
-    def _get_similar_users_tx(tx, user_id: str):
+    def _get_similar_users_tx(tx, user_id: str, min_score: float):
         query = """
         MATCH (u:User {user_id: $user_id})-[r:SIMILAR_TO]->(u2:User)
-        WHERE r.score >= 0.8  
+        WHERE r.score >= $min_score
         RETURN u2.user_id AS similar_user_id, u2.name AS similar_user_name, 
                r.score AS score, r.date AS score_date, r.preferences AS shared_genres
         ORDER BY r.score DESC
         """
-        result = tx.run(query, user_id=user_id)
+        result = tx.run(query, user_id=user_id, min_score=min_score)
         return [record.data() for record in result]
+
+    #delete
+    def delete_similar_to_relation(self, user1_id: str, user2_id: str):
+        with self.driver.session() as session:
+            session.execute_write(self._delete_similar_to_tx, user1_id, user2_id)
+
+    @staticmethod
+    def _delete_similar_to_tx(tx, user1_id: str, user2_id: str):
+        query = """
+        MATCH (u1:User {user_id: $user1_id})-[r:SIMILAR_TO]->(u2:User {user_id: $user2_id})
+        DELETE r
+        """
+        tx.run(query, user1_id=user1_id, user2_id=user2_id)
