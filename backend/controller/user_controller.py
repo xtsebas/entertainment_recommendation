@@ -37,7 +37,7 @@ class UserController:
     def _create_user_tx(tx, name: str, age: int, favorite_genres: str, favorite_duration: int):
         query = """
         CREATE (u:User {user_id: $user_id, name: $name, age: $age, favorite_genres: $favorite_genres, favorite_duration: $favorite_duration})
-        RETURN u.user_id AS id, u.name AS name, u.age AS age, u.favorite_genres AS favorite_genres, u.favorite_duration AS favorite_duration
+        RETURN u.user_id AS user_id, u.name AS name, u.age AS age, u.favorite_genres AS favorite_genres, u.favorite_duration AS favorite_duration
         """
         result = tx.run(
             query,

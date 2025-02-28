@@ -7,6 +7,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from backend.controller.user_controller import UserController
 from backend.controller.genre_controller import GenreController
 from backend.controller.likes_relation_controller import LikesRelationController
+from backend.controller.similarTo_relation_controller import SimilarToRelationController
 from backend.view.user import User
 
 def show_create_user():
@@ -16,6 +17,7 @@ def show_create_user():
 
     user_controller = UserController()
     genre_controller = GenreController()
+    similar_to_controller = SimilarToRelationController()
 
     # Obtener géneros disponibles desde la base de datos
     genres = genre_controller.get_all_genres()
@@ -51,7 +53,7 @@ def show_create_user():
             userCreate = user_controller.create_user(user)
 
             if userCreate:  
-                neo4j_user_id = userCreate['id']  # Usamos el ID asignado por Neo4j
+                neo4j_user_id = userCreate['user_id']  # Usamos el ID asignado por Neo4j
                 
                 today = date.today()
                 likes_controller = LikesRelationController() 
@@ -71,6 +73,7 @@ def show_create_user():
                         print(f"⚠️ No se encontró el ID para el género '{genre_name}', no se creará la relación.")
                 
                 likes_controller.close()  
+                similar_to_controller.create_similar_to_jaccard(neo4j_user_id)
 
                 
                 st.success(f"🎉 Usuario {name} creado con éxito! ID Neo4j: {neo4j_user_id}")
