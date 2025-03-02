@@ -98,3 +98,23 @@ class UserWatchedController:
         """Selecciona aleatoriamente un dispositivo de una lista predefinida."""
         devices = ["mobile", "tablet", "laptop", "smart_tv"]
         return random.choice(devices)
+
+    def get_watched_series_by_user(self, user_id: str):
+        """
+        Retrieves all series watched by a user, returning series title, age classification, and view date.
+        """
+        with self.driver.session() as session:
+            result = session.execute_read(self._get_watched_series_by_user_tx, user_id)
+        return result
+
+    @staticmethod
+    def _get_watched_series_by_user_tx(tx, user_id: str):
+        query = """
+        MATCH (u:User {user_id: $user_id})-[w:WATCHED]->(s:Serie), 
+              (med:Media)-[:IS_A]->(s:Serie) 
+        RETURN med.title, w.played_episodes, w.view_date, s.total_episodes, s.status
+        """
+        result = tx.run(query, user_id=user_id)
+        return [record.data() for record in result]
+
+    

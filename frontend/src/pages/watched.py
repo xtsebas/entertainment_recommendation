@@ -26,7 +26,18 @@ def show():
         st.info("No has visto ninguna película aún.")
 
     st.subheader("📺 Series vistas")
-    # TODO: Implement get_watched_series_by_user() when available
+    watched_series  = watchedController.get_watched_series_by_user(user_id)
+
+    if watched_series:
+        df_series = pd.DataFrame(watched_series)
+        st.table(df_series)
+    else:
+        st.info("No has visto ninguna serie aún.")
+    
+    
+    
+    
+
 
 
     
