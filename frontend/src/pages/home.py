@@ -5,10 +5,12 @@ import sys
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from backend.controller.user_controller import UserController
 from backend.controller.rating_controller import RatingController
+from backend.controller.watched_controller import UserWatchedController
 from backend.view.rating import Rating
 from datetime import datetime
 
 ratingController = RatingController()
+watchedRelationController = UserWatchedController()
 
 def format_date(date_value):
     try:
@@ -79,6 +81,7 @@ def show():
     st.title("🎬 Entertainment Recommendation")
     st.write(f"Bienvenido {user['name']} al sistema de recomendación de entretenimiento.")
     st.markdown("---")
+    print("current user_id -> ",user)
     
 
     user_controller = UserController()
@@ -93,9 +96,9 @@ def show():
     series = st.session_state["series"]
     
     
-    print("FETCHING DATAAAAA")
-    print(series)
-    print(movies)
+    # print("FETCHING DATAAAAA")
+    # print(series)
+    # print(movies)
     
 
     # if "movies" not in st.session_state:
@@ -159,6 +162,7 @@ def show():
         content_index = 0
 
     current_media = content[content_index]
+    print('current_media ->', current_media)
 
     # Estilos CSS para la tarjeta centrada
     st.markdown("""
@@ -242,12 +246,21 @@ def show():
     col1, col2 = st.columns([1, 1])
     with col2:
         if st.button("✅ Ya la vi"):
+            print('i watched media_id -> ', current_media["media_id"])
+            print('cuurewnt user_id', user["user_id"])
             if st.session_state.active_tab == "Películas":
                 rate(media_type="Movie")
+                
+                watchedRelationController.create_user_watched_movie(media_id=current_media["media_id"], user_id=user["user_id"])
+                print('created watched ')
+                
                 st.session_state.movie_index = (st.session_state.movie_index + 1) % len(movies)
+                
             else:                
-                rate(media_type="Movie")
+                rate(media_type="Serie")
                 st.session_state.series_index = (st.session_state.series_index + 1) % len(series)
+                watchedRelationController.create_user_watched_serie(media_id=current_media["media_id"], user_id=user["user_id"])
+
             # st.session_state["show_rating"] = True
 
     with col1:
