@@ -248,18 +248,16 @@ def show():
         if st.button("✅ Ya la vi"):
             print('i watched media_id -> ', current_media["media_id"])
             print('cuurewnt user_id', user["user_id"])
-            if st.session_state.active_tab == "Películas":
-                rate(media_type="Movie")
-                
+            if st.session_state.active_tab == "Películas":   
+                             
                 watchedRelationController.create_user_watched_movie(media_id=current_media["media_id"], user_id=user["user_id"])
-                print('created watched ')
-                
+                rate(media_type="Movie", current_media=current_media, current_user=user)
                 st.session_state.movie_index = (st.session_state.movie_index + 1) % len(movies)
                 
             else:                
-                rate(media_type="Serie")
-                st.session_state.series_index = (st.session_state.series_index + 1) % len(series)
                 watchedRelationController.create_user_watched_serie(media_id=current_media["media_id"], user_id=user["user_id"])
+                rate(media_type="Serie", current_media=current_media, current_user=user)
+                st.session_state.series_index = (st.session_state.series_index + 1) % len(series)
 
             # st.session_state["show_rating"] = True
 
@@ -274,10 +272,57 @@ def show():
     # show_create_rating(current_media)
     st.markdown('</div>', unsafe_allow_html=True)
     user_controller.close()
+    
+final_feeling_options = ["Very Good", "Good", "Neutral", "Bad", "Very Bad"]
 
-@st.dialog("Sube tu rating")
-def rate(media_type: str):
-    st.write(f"Califica este contenido")
-    reason = st.text_input("Because...")
+@st.dialog("Sube tu rating ⭐")
+def rate(media_type: str, current_media: dict, current_user: dict):
+    st.write(f"{current_user["name"]} Califica este contenido!🍿")
+    st.write(current_media["media_title"])
+    
+    st.markdown(f'🎞️ **{current_media["media_title"]} 📺**')
+
+    
+    rating_id = str(uuid.uuid4())
+    # Seleccionar la calificación (1 a 5)
+    rating = st.slider("Rating", min_value=1, max_value=5, step=1)
+    
+    # Campo opcional para comentario
+    comment = st.text_area("Comentario (opcional)", "")
+
+    # Seleccionar el sentimiento final
+    final_feeling = st.selectbox("¿Cómo te sientes acerca de este contenido?", final_feeling_options)
+
+    # Checkbox de recomendación
+    recommend = st.checkbox("¿Recomendarías este contenido?", value=False)
+
+
+    
     if st.button("Submit"):
+        
+        rating_ob = Rating(
+            rating_id=rating_id,
+            rating=rating,
+            recommend=recommend,
+            final_feeling = final_feeling, 
+            comment=comment
+        )
+        
+        if not rating:
+            st.warning("Debes seleccionar un rating entre 1 y 5.")
+            return
+        if st.session_state.active_tab == "Películas":
+            ratingController.rate_movie(
+                media_id=current_media["media_id"], 
+                rating=rating_ob,
+                user_id=current_user["user_id"]
+            )
+            
+        else:
+            ratingController.rate_serie(
+                media_id=current_media["media_id"], 
+                rating=rating_ob,
+                user_id=current_user["user_id"]
+            )
+            
         st.rerun()

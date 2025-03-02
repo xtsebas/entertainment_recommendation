@@ -1,6 +1,8 @@
 from neo4j import GraphDatabase
 from dotenv import load_dotenv
 import os
+import random
+from datetime import datetime, timedelta
 import sys
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from view.rating import Rating
@@ -151,3 +153,69 @@ class RatingController:
         SET r.is_good = $is_good
         """
         tx.run(query, rating_id=rating_id, is_good=is_good)
+    
+    # def rate_movie(self, user_id: str, media_id: str, rating: Rating):
+    #     pass
+    
+    def rate_serie(self, user_id: str, media_id: str, rating: Rating):
+        pass
+    
+    def rate_movie(self, user_id: str, media_id: str, rating: Rating):
+        """
+        Creates a Rating node and links it with a User and Media (Movie) using relations with properties.
+        Ensures the Media node is correctly related to Movie via IS_A.
+        """
+        # Generate random properties
+        rating_date = self._generate_random_date()
+        recommendation_level = rating.rating  # Same as rating
+        rating_change_count = random.randint(0, 3)
+
+        relevance = round(random.uniform(0.5, 1.0), 2)
+        rating_context = random.choice(["Casual Watch", "Cinephile Review", "Critic Opinion", "First Time View", "Rewatch"])
+        first_impression = random.choice([True, False])
+
+        with self.driver.session() as session:
+            session.execute_write(
+                self._rate_movie_tx, user_id, media_id, rating, rating_date, recommendation_level, rating_change_count,
+                relevance, rating_context, first_impression
+            )
+
+    @staticmethod
+    def _rate_movie_tx(tx, user_id, media_id, rating, rating_date, recommendation_level, rating_change_count,
+                       relevance, rating_context, first_impression):
+        query = """
+        MATCH (u:User {user_id: $user_id}), (m:Media {media_id: $media_id})-[:IS_A]->(mov:Movie)
+        CREATE (r:Rating {
+            rating_id: $rating_id,
+            rating: $rating,
+            recommend: $recommend,
+            final_feeling: $final_feeling,
+            comment: $comment
+        })
+        CREATE (u)-[rated:RATED {
+            rating_date: $rating_date,
+            recommendation_level: $recommendation_level,
+            rating_change_count: $rating_change_count
+        }]->(r)
+        CREATE (r)-[bt:BELONGS_TO {
+            relevance: $relevance,
+            rating_context: $rating_context,
+            first_impression: $first_impression
+        }]->(mov)
+        RETURN u, rated, r, bt, mov
+        """
+        tx.run(query, 
+               user_id=user_id, media_id=media_id,
+               rating_id=rating.rating_id, rating=rating.rating, recommend=rating.recommend,
+               final_feeling=rating.final_feeling, comment=rating.comment,
+               rating_date=rating_date, recommendation_level=recommendation_level,
+               rating_change_count=rating_change_count,
+               relevance=relevance, rating_context=rating_context,
+               first_impression=first_impression)
+
+    @staticmethod
+    def _generate_random_date():
+        """Generates a random date within the last 2 years."""
+        days_ago = random.randint(0, 730)
+        random_date = datetime.now() - timedelta(days=days_ago)
+        return random_date.strftime("%Y-%m-%d")
