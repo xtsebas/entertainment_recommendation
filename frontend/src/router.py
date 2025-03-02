@@ -2,7 +2,7 @@ import streamlit as st
 import os
 import sys
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from src.pages import home, genres, users, preferences, signup, ratings, movies, series
+from src.pages import home, genres, users, preferences, signup, ratings, movies, series, watched
 from src.session_manager import is_authenticated
 
 # Definir rutas disponibles
@@ -15,6 +15,7 @@ ROUTES = {
     "Ratings" : ratings.show,
     "Movies" : movies.show,
     "Series" : series.show,
+    "Watched" : watched.show
 }
 
 def show_page():

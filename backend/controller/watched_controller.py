@@ -67,6 +67,25 @@ class UserWatchedController:
         """
         tx.run(query, user_id=user_id, media_id=media_id, view_date=view_date, device=device, played_episodes=played_episodes)
 
+    def get_watched_movies_by_user(self, user_id: str):
+        """
+        Retrieves all movies watched by a user, returning movie title, age classification, and view date.
+        """
+        with self.driver.session() as session:
+            result = session.execute_read(self._get_watched_movies_by_user_tx, user_id)
+        return result
+
+    @staticmethod
+    def _get_watched_movies_by_user_tx(tx, user_id: str):
+        query = """
+        MATCH (u:User {user_id: $user_id})-[w:WATCHED]->(m:Movie), 
+              (med:Media)-[:IS_A]->(m:Movie) 
+        RETURN med.title AS movie, m.age_classification AS age_classification, w.view_date AS view_date
+        """
+        result = tx.run(query, user_id=user_id)
+        return [record.data() for record in result]
+        
+
     @staticmethod
     def _generate_random_date():
         """Genera una fecha aleatoria dentro de los últimos 2 años."""
