@@ -2,7 +2,7 @@ import os
 import sys
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 import streamlit as st
-from frontend.src.pages.series_crud.series_crud_forms import show_create_serie
+from frontend.src.pages.series_crud.series_crud_forms import show_create_serie, show_read_serie
 
 def show():
     st.title("🎵 Gestión de las series")
@@ -44,8 +44,8 @@ def show():
          st.session_state["crud_action"] = "create"
     if st.button("🔍 View series DB", key="read"):
          st.session_state["crud_action"] = "read"
-    # if st.button("✏️ Update", key="update"):
-    #      st.session_state["crud_action"] = "update"
+#     if st.button("✏️ Update", key="update"):
+#          st.session_state["crud_action"] = "update"
     # if st.button("🗑️ Delete", key="delete"):
     #      st.session_state["crud_action"] = "delete"
 
@@ -56,8 +56,7 @@ def show():
          st.subheader("Crear Serie")
          show_create_serie()
     elif accion == "read":
-         st.subheader("Leer Ratings")
-         st.write("Aquí se muestran los ratings existentes.")
+         show_read_serie()
          # Agregar la lógica de lectura de ratings
     elif accion == "update":
          st.subheader("Actualizar Rating")

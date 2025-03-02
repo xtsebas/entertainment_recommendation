@@ -1,12 +1,17 @@
 import streamlit as st
 import uuid
+import pandas as pd
+
 from datetime import date
 from backend.controller.media_controller import MediaController
+from backend.controller.serie_controller import SerieController
+
 from backend.controller.is_a_controller import IS_A_Controller
 from backend.view.media import Media
 from backend.view.serie import Serie
 # Initialize controllers
 seriesController = MediaController()
+singleSeriesController =SerieController()
 is_a_controller = IS_A_Controller()
 
 def show_create_serie():
@@ -78,7 +83,25 @@ def show_create_serie():
 
 
 def show_read_serie():
-    pass 
+    st.title("📺 Lista de Series")
+
+    # Fetch total series count (assuming database has 1979 series)
+    total_series = 1979  # Hardcoded, replace with actual DB query if needed
+    st.write(f"📊 Total de series disponibles: **{total_series}**")
+
+    # User input to modify the limit
+    limit = st.number_input("Cantidad de series a mostrar:", min_value=1, max_value=total_series, value=25, step=1)
+
+    # Fetch series based on limit
+    series = singleSeriesController.get_all_series_sorted_by_creation(limit=limit)
+
+    # Convert to DataFrame and display
+    if series:
+        df_series = pd.DataFrame(series)
+        st.table(df_series)
+    else:
+        st.info("No hay series disponibles.")    
+
 
 def show_update_serie():
     pass 

@@ -47,4 +47,29 @@ class SerieController:
             show_runner=series.show_runner
         )
     
+    def get_all_series_sorted_by_creation(self, limit: int = 1979):
+        """
+        Retrieves all series sorted by creation date (most recent first), with an optional limit.
+        """
+        with self.driver.session() as session:
+            result = session.execute_read(self._get_all_series_sorted_by_creation_tx, limit)
+        return result
+
+    @staticmethod
+    def _get_all_series_sorted_by_creation_tx(tx, limit: int):
+        query = """
+        MATCH (m:Media)-[:IS_A]->(s:Serie) 
+        RETURN 
+            m.title AS serie, 
+            s.show_runner AS show_runner, 
+            s.total_episodes AS episodes, 
+            s.total_seasons AS seasons, 
+            s.release_format AS format,
+            s.created_at AS created_at
+        ORDER BY s.created_at DESC
+        LIMIT $limit
+        """
+        result = tx.run(query, limit=limit)
+        return [record.data() for record in result]
+    
 
