@@ -64,8 +64,7 @@ class SerieController:
             s.show_runner AS show_runner, 
             s.total_episodes AS episodes, 
             s.total_seasons AS seasons, 
-            s.release_format AS format,
-            s.created_at AS created_at
+            s.release_format AS format
         ORDER BY s.created_at DESC
         LIMIT $limit
         """

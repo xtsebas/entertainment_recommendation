@@ -29,7 +29,7 @@ class IS_A_Controller:
     def _create_movie_relation_tx(tx, media_id: str, movie: Movie):
         query = """
         MATCH (med:Media {media_id: $media_id})
-        MATCH (m: {
+        MATCH (m:Movie {
             duration: $duration,
             budget: $budget,
             revenue: $revenue,

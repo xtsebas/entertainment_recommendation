@@ -46,3 +46,26 @@ class MovieController:
             nominations=movie.nominations,
             age_classification=movie.age_classification
         )
+
+    def get_all_movies_sorted_by_creation(self, limit: int = 1979):
+        """
+        Retrieves all movies sorted by creation date (most recent first), with an optional limit.
+        """
+        with self.driver.session() as session:
+            result = session.execute_read(self._get_all_movies_sorted_by_creation_tx, limit)
+        return result
+
+    @staticmethod
+    def _get_all_movies_sorted_by_creation_tx(tx, limit: int):
+        query = """
+        MATCH (m:Media)-[:IS_A]->(mov:Movie)
+        RETURN 
+            m.title AS movie, 
+            m.avg_rating AS rating,
+            mov.age_classification AS classification,
+            id(mov) AS node_id
+        ORDER BY id(mov) DESC       
+        LIMIT $limit
+        """
+        result = tx.run(query, limit=limit)
+        return [record.data() for record in result]

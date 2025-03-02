@@ -2,7 +2,7 @@ import os
 import sys
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 import streamlit as st
-from frontend.src.pages.movies_crud.movies_crud_forms import show_create_movie
+from frontend.src.pages.movies_crud.movies_crud_forms import show_create_movie, show_read_movie
 
 def show():
     st.title("🎥 Gestión de las peliculas")
@@ -56,9 +56,7 @@ def show():
          st.subheader("Crear pelicula")
          show_create_movie()
     elif accion == "read":
-         st.subheader("Leer Ratings")
-         st.write("Aquí se muestran los ratings existentes.")
-         # Agregar la lógica de lectura de ratings
+         show_read_movie()
     elif accion == "update":
          st.subheader("Actualizar Rating")
          st.write("Aquí puedes actualizar un rating existente.")

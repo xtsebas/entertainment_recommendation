@@ -3,6 +3,8 @@ import uuid
 from datetime import date
 from backend.controller.media_controller import MediaController
 from backend.controller.is_a_controller import IS_A_Controller
+from backend.controller.movie_controller import MovieController
+import pandas as pd
 
 from backend.view.movie import Movie
 from backend.view.media import Media
@@ -11,6 +13,7 @@ from backend.view.media import Media
 # Initialize controller
 movieController = MediaController()
 is_a_relationControlller = IS_A_Controller()
+movieControllerSingle = MovieController()
 
 def show_create_movie():
     st.title("🎬 Agregar una Nueva Película")
@@ -82,3 +85,23 @@ def show_create_movie():
             is_a_relationControlller.create_movie_relation(media_id=media_id, movie=movie)
             st.write(media_id)
             st.success(f"✅ Película '{title}' agregada con éxito.")
+
+def show_read_movie():
+    st.title("🎬 Lista de Películas")
+
+    # Fetch total movies count (assuming database has 1979 movies)
+    total_movies = 4000  # Hardcoded, replace with actual DB query if needed
+    st.write(f"📊 Total de películas disponibles: **{total_movies}**")
+
+    # User input to modify the limit
+    limit = st.number_input("Cantidad de películas a mostrar:", min_value=1, max_value=total_movies, value=25, step=1)
+
+    # Fetch movies based on limit
+    movies = movieControllerSingle.get_all_movies_sorted_by_creation(limit=limit)
+
+    # Convert to DataFrame and display
+    if movies:
+        df_movies = pd.DataFrame(movies)
+        st.table(df_movies)
+    else:
+        st.info("No hay películas disponibles.")
