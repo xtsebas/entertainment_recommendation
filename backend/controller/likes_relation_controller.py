@@ -52,8 +52,8 @@ class LikesRelationController:
     @staticmethod
     def _get_likes_by_user_tx(tx, user_id: str):
         query = """
-        MATCH (u:User {node_id: $user_id})-[r:LIKES]->(g:Genre)
-        RETURN g.node_id AS genre_id, g.name AS genre_name, r.preference_level AS preference_level, 
+        MATCH (u:User {user_id: $user_id})-[r:LIKES]->(g:Genre)
+        RETURN g.user_id AS genre_id, g.name AS genre_name, r.preference_level AS preference_level, 
                r.aggregation_date AS aggregation_date, r.last_engagement AS last_engagement
         """
         result = tx.run(query, user_id=user_id)
@@ -67,7 +67,7 @@ class LikesRelationController:
     @staticmethod
     def _delete_likes_tx(tx, user_id: str, genre_id: str):
         query = """
-        MATCH (u:User {node_id: $user_id})-[r:LIKES]->(g:Genre {node_id: $genre_id})
+        MATCH (u:User {user_id: $user_id})-[r:LIKES]->(g:Genre {genre_id: $genre_id})
         DELETE r
         """
         tx.run(query, user_id=user_id, genre_id=genre_id)

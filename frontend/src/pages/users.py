@@ -2,9 +2,13 @@ import streamlit as st
 import os
 import sys
 import pandas as pd
+from datetime import date
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-
 from backend.controller.user_controller import UserController
+from backend.controller.genre_controller import GenreController
+from backend.controller.likes_relation_controller import LikesRelationController
+from backend.controller.similarTo_relation_controller import SimilarToRelationController
+
 
 def show():
     st.title("👤 Gestión de Usuarios")
@@ -25,47 +29,16 @@ def show():
         else:
             return
     else:
-        if "selected_user_index" not in st.session_state:
-            st.session_state["selected_user_index"] = 0
 
-        selected_index = st.session_state["selected_user_index"]
-        # Indice no se salga de rango si se eliminan usuarios
-        if selected_index >= len(users):
-            st.session_state["selected_user_index"] = 0
-            selected_index = 0
-
-        selected_user = users[selected_index]
+        selected_user = st.session_state["user"]
 
         # Mostrar la tarjeta del usuario seleccionado 
         show_user_card(selected_user)
 
-        # Botones de navegación (anterior/siguiente)
-        col1, col2, col3 = st.columns([1, 2, 1])
-        with col1:
-            if st.button("⬅️ Anterior", key="prev_user") and selected_index > 0:
-                st.session_state["selected_user_index"] -= 1
-                st.experimental_rerun()
-        with col3:
-            if st.button("Siguiente ➡️", key="next_user") and selected_index < len(users) - 1:
-                st.session_state["selected_user_index"] += 1
-                st.experimental_rerun()
-
-        st.markdown("---")
-        # Botón para seleccionar el usuario e iniciar sesión 
-        if st.button(f"Seleccionar {selected_user['name']}", key="select_user"):
-            st.session_state["authenticated"] = True
-            st.session_state["user"] = selected_user  # Guardar el usuario en la sesión
-            st.success(f"Has seleccionado a {selected_user['name']}")
-            st.session_state["selected_page"] = "Home"
-            st.experimental_rerun()
-
         # CRUD
         st.markdown("## Operaciones CRUD")
 
-        colA, colB, colC, colD = st.columns(4)
-        with colA:
-            if st.button("🆕 Crear", key="create"):
-                st.session_state["crud_action"] = "create"
+        colB, colC, colD = st.columns(3)
         with colB:
             if st.button("🔍 Leer", key="read"):
                 st.session_state["crud_action"] = "read"
@@ -170,11 +143,11 @@ def show_create_form(user_controller: UserController):
         else:
             st.error("Error al crear el usuario en Neo4j.")
         st.session_state["crud_action"] = None
-        st.experimental_rerun()
+        st.rerun()
 
     if st.button("Cancelar"):
         st.session_state["crud_action"] = None
-        st.experimental_rerun()
+        st.rerun()
 
 
 def show_read(users: list):
@@ -188,43 +161,94 @@ def show_read(users: list):
     st.dataframe(df)
     if st.button("Cerrar"):
         st.session_state["crud_action"] = None
-        st.experimental_rerun()
+        st.rerun()
 
 
 def show_update_form(user_controller: UserController, user: dict):
+    genre_controller = GenreController()
+    similar_to_controller = SimilarToRelationController()
+
+    genres = genre_controller.get_all_genres()
+    genre_controller.close()
     #Muestra un formulario para actualizar un usuario.
     st.subheader("Actualizar Usuario")
     new_name = st.text_input("Nuevo Nombre:", value=user["name"])
     new_age = st.number_input("Nueva Edad:", min_value=0, max_value=120, value=user["age"])
+
     # Manejo de géneros favoritos
     fav_genres_str = user["favorite_genres"]
-    if isinstance(fav_genres_str, list):
-        fav_genres_str = ", ".join(fav_genres_str)
 
-    new_fav_genres = st.text_input("Nuevos Géneros (separa con comas):", value=fav_genres_str)
+    # Convertir a lista si es un string
+    if isinstance(fav_genres_str, str):
+        fav_genres_list = fav_genres_str.split(",")
+    else:
+        fav_genres_list = fav_genres_str  # Ya es lista
+
+    fav_genres_list = [genre.strip() for genre in fav_genres_list]
+    genre_names = {genre["name"]: genre["id"] for genre in genres}
+
+    # Mostrar multiselect con los nombres de géneros y preseleccionar los favoritos
+    new_fav_genres = st.multiselect(
+        "Selecciona tus géneros favoritos",
+        options=list(genre_names.keys()),
+        default=[genre for genre in fav_genres_list if genre in genre_names] 
+    )
     new_fav_duration = st.number_input("Nueva Duración Favorita (min):", min_value=1, max_value=500, value=user["favorite_duration"])
 
     if st.button("Guardar Cambios"):
-        # Update con (delete + create)
-        user_controller.delete_user(user["user_id"])
+
         updated_data = {
+            "user_id": user['user_id'],
             "name": new_name,
             "age": new_age,
-            "favorite_genres": new_fav_genres,
+            "favorite_genres": ",".join(new_fav_genres),
             "favorite_duration": new_fav_duration
         }
-        created_user = user_controller.create_user_object(updated_data)
+
+        created_user = user_controller.update_user(user_data=updated_data)
+        current_favorite_genres = user["favorite_genres"]
+        current_favorite_genres = [genre.strip() for genre in current_favorite_genres.split(",")]
+
+
         if created_user:
-            st.success("Usuario actualizado correctamente.")
+            neo4j_user_id = user['user_id']  
+                
+            today = date.today()
+            likes_controller = LikesRelationController() 
+            for genre_name in current_favorite_genres:
+                if genre_name not in new_fav_genres:
+                    genre_id = genre_names.get(genre_name)
+                    if genre_id:
+                        print(f"❌ Eliminando relación LIKES: user_id={neo4j_user_id}, genre_id={genre_id}")
+                        likes_controller.delete_likes_relation(neo4j_user_id, genre_id)
+
+            for genre_name in new_fav_genres:
+                genre_id = genre_names.get(genre_name)
+
+                if genre_id:  
+                    likes_controller.create_likes_relation(
+                        user_id=neo4j_user_id,  
+                        genre_id=genre_id,  
+                        preference_level=5,  
+                        aggregation_date=today,  
+                        last_engagement=today  
+                    )
+
+            likes_controller.close()  
+            similar_to_controller.create_similar_to_jaccard(neo4j_user_id)
+            
+            st.success(f"🎉 Usuario {new_name} creado con éxito! ID Neo4j: {neo4j_user_id}")
             st.session_state["user"] = created_user
+            st.session_state["selected_page"] = "Users" 
+            st.rerun()
         else:
-            st.error("Error al actualizar el usuario.")
-        st.session_state["crud_action"] = None
-        st.experimental_rerun()
+            st.error("⚠️ Error al actualizar el usuario.")
+            st.session_state["crud_action"] = None
+            st.rerun()
 
     if st.button("Cancelar"):
         st.session_state["crud_action"] = None
-        st.experimental_rerun()
+        st.rerun()
 
 
 def delete_user(user_controller: UserController, user: dict):
@@ -235,10 +259,13 @@ def delete_user(user_controller: UserController, user: dict):
         user_controller.delete_user(user["user_id"])
         st.success(f"Usuario '{user['name']}' eliminado correctamente.")
         st.session_state["crud_action"] = None
-        st.experimental_rerun()
+        st.session_state["authenticated"] = False
+        st.session_state["user"] = None
+        st.session_state["selected_page"] = "Signup" 
+        st.rerun()
     if st.button("Cancelar"):
         st.session_state["crud_action"] = None
-        st.experimental_rerun()
+        st.rerun()
 
 
 def inject_css():

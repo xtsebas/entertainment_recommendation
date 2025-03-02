@@ -106,6 +106,62 @@ class UserController:
         result = tx.run(query, name=name)
         return result.single() 
     
+    #Updated user
+    def update_user(self, user_data: dict):
+        """
+        Actualiza los datos de un usuario en la base de datos.
+        """
+        user_id = user_data.get("user_id")
+        name = user_data.get("name")
+        age = user_data.get("age")
+        favorite_genres = user_data.get("favorite_genres")
+        favorite_duration = user_data.get("favorite_duration")
+
+        if not user_id:
+            return {"message": "Error: Se requiere un ID de usuario para actualizar."}
+
+        with self.driver.session() as session:
+            result = session.execute_write(
+                self._update_user_tx,
+                user_id,
+                name,
+                age,
+                favorite_genres,
+                favorite_duration
+            )
+        
+        return result
+
+    @staticmethod
+    def _update_user_tx(tx, user_id: str, name: str, age: int, favorite_genres: str, favorite_duration: int):
+        query_parts = []
+        params = {"user_id": user_id}
+
+        if name is not None:
+            query_parts.append("u.name = $name")
+            params["name"] = name
+        if age is not None:
+            query_parts.append("u.age = $age")
+            params["age"] = age
+        if favorite_genres is not None:
+            query_parts.append("u.favorite_genres = $favorite_genres")
+            params["favorite_genres"] = favorite_genres
+        if favorite_duration is not None:
+            query_parts.append("u.favorite_duration = $favorite_duration")
+            params["favorite_duration"] = favorite_duration
+
+        if not query_parts:
+            return {"message": "No se han proporcionado datos para actualizar."}
+
+        query = f"""
+        MATCH (u:User {{user_id: $user_id}})
+        SET {", ".join(query_parts)}
+        RETURN u.user_id AS user_id, u.name AS name, u.age AS age, 
+               u.favorite_genres AS favorite_genres, u.favorite_duration AS favorite_duration
+        """
+
+        result = tx.run(query, **params)
+        return result.single()
 
     #Delete user
     def delete_user(self, user_id: str):
