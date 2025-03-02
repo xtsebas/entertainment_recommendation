@@ -157,8 +157,8 @@ class RatingController:
     # def rate_movie(self, user_id: str, media_id: str, rating: Rating):
     #     pass
     
-    def rate_serie(self, user_id: str, media_id: str, rating: Rating):
-        pass
+    # def rate_serie(self, user_id: str, media_id: str, rating: Rating):
+    #     pass
     
     def rate_movie(self, user_id: str, media_id: str, rating: Rating):
         """
@@ -212,6 +212,59 @@ class RatingController:
                rating_change_count=rating_change_count,
                relevance=relevance, rating_context=rating_context,
                first_impression=first_impression)
+
+    def rate_serie(self, user_id: str, media_id: str, rating: Rating):
+        """
+        Creates a Rating node and links it with a User and Media (Serie) using relations with properties.
+        Ensures the Media node is correctly related to Serie via IS_A.
+        """
+        # Generate random properties
+        rating_date = self._generate_random_date()
+        recommendation_level = rating.rating  # Same as rating
+        rating_change_count = random.randint(0, 3)
+
+        relevance = round(random.uniform(0.5, 1.0), 2)
+        rating_context = random.choice(["Casual Watch", "Binge Watch", "Critical Review", "First Time Watch", "Rewatch"])
+        seasons_watched = random.randint(1, 5)  # Assuming a max of 5 seasons watched
+
+        with self.driver.session() as session:
+            session.execute_write(
+                self._rate_serie_tx, user_id, media_id, rating, rating_date, recommendation_level, rating_change_count,
+                relevance, rating_context, seasons_watched
+            )
+
+    @staticmethod
+    def _rate_serie_tx(tx, user_id, media_id, rating, rating_date, recommendation_level, rating_change_count,
+                       relevance, rating_context, seasons_watched):
+        query = """
+        MATCH (u:User {user_id: $user_id}), (m:Media {media_id: $media_id})-[:IS_A]->(se:Serie)
+        CREATE (r:Rating {
+            rating_id: $rating_id,
+            rating: $rating,
+            recommend: $recommend,
+            final_feeling: $final_feeling,
+            comment: $comment
+        })
+        CREATE (u)-[rated:RATED {
+            rating_date: $rating_date,
+            recommendation_level: $recommendation_level,
+            rating_change_count: $rating_change_count
+        }]->(r)
+        CREATE (r)-[bt:BELONGS_TO {
+            relevance: $relevance,
+            rating_context: $rating_context,
+            seasons_watched: $seasons_watched
+        }]->(se)
+        RETURN u, rated, r, bt, se
+        """
+        tx.run(query, 
+               user_id=user_id, media_id=media_id,
+               rating_id=rating.rating_id, rating=rating.rating, recommend=rating.recommend,
+               final_feeling=rating.final_feeling, comment=rating.comment,
+               rating_date=rating_date, recommendation_level=recommendation_level,
+               rating_change_count=rating_change_count,
+               relevance=relevance, rating_context=rating_context,
+               seasons_watched=seasons_watched)
 
     @staticmethod
     def _generate_random_date():
