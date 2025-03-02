@@ -46,3 +46,5 @@ class SerieController:
             release_format=series.release_format,
             show_runner=series.show_runner
         )
+    
+

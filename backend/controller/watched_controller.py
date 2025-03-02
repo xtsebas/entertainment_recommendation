@@ -112,9 +112,41 @@ class UserWatchedController:
         query = """
         MATCH (u:User {user_id: $user_id})-[w:WATCHED]->(s:Serie), 
               (med:Media)-[:IS_A]->(s:Serie) 
-        RETURN med.title, w.played_episodes, w.view_date, s.total_episodes, s.status
+        RETURN med.title as serie, w.played_episodes as played_episodes, w.view_date as view_date, s.total_episodes as total_episodes, s.status as status
         """
         result = tx.run(query, user_id=user_id)
         return [record.data() for record in result]
 
-    
+    def delete_watched_serie_by_user(self, user_id: str, title: str):
+        """
+        Deletes the WATCHED relationship between a User and a Serie based on the series title.
+        """
+        with self.driver.session() as session:
+            session.execute_write(self._delete_watched_serie_by_user_tx, user_id, title)
+
+    @staticmethod
+    def _delete_watched_serie_by_user_tx(tx, user_id: str, title: str):
+        query = """
+        MATCH (u:User {user_id: $user_id})-[w:WATCHED]->(s:Serie),
+              (med:Media)-[:IS_A]->(s:Serie)
+        WHERE med.title = $title
+        DELETE w
+        """
+        tx.run(query, user_id=user_id, title=title)
+
+    def delete_watched_movie_by_user(self, user_id: str, title: str):
+        """
+        Deletes the WATCHED relationship between a User and a Movie based on the movie title.
+        """
+        with self.driver.session() as session:
+            session.execute_write(self._delete_watched_movie_by_user_tx, user_id, title)
+
+    @staticmethod
+    def _delete_watched_movie_by_user_tx(tx, user_id: str, title: str):
+        query = """
+        MATCH (u:User {user_id: $user_id})-[w:WATCHED]->(m:Movie),
+              (med:Media)-[:IS_A]->(m:Movie)
+        WHERE med.title = $title
+        DELETE w
+        """
+        tx.run(query, user_id=user_id, title=title)
