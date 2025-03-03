@@ -55,8 +55,8 @@ class RatingController:
     @staticmethod
     def _get_rating_tx(tx, rating_id: str):
         query = """
-        MATCH (r:Rating {node_id: $rating_id})
-        RETURN r.node_id AS id,
+        MATCH (r:Rating {rating_id: $rating_id})
+        RETURN r.rating_id AS rating_id,
                r.rating AS rating,
                r.comment AS comment,
                r.final_feeling AS final_feeling,
@@ -116,30 +116,72 @@ class RatingController:
         )   
         return [record.data() for record in result]
 
-    def update_rating(self, rating: Rating):
-        #Actualiza la información de un Rating existente.
-        #Después de actualizarlo, recalcula las estadísticas.
+    def update_rating(self, rating_data: dict):
+        """
+        Actualiza los datos de un Rating en la base de datos.
+        """
+        rating_id = rating_data.get("rating_id")
+        user_id= rating_data.get("user_id")
+        rating = rating_data.get("rating")
+        comment = rating_data.get("comment")
+        final_feeling = rating_data.get("final_feeling")
+        recommend = rating_data.get("recommend")
+
+        if not rating_id:
+            return {"message": "Error: Se requiere un ID de rating para actualizar."}
+
         with self.driver.session() as session:
-            session.execute_write(self._update_rating_tx, rating)
-            self.update_rating_stats(rating.node_id)
+            result = session.execute_write(
+                self._update_rating_tx,
+                rating_id,
+                user_id,
+                rating,
+                comment,
+                final_feeling,
+                recommend
+            )
+        
+        return result
 
     @staticmethod
-    def _update_rating_tx(tx, rating: Rating):
-        query = """
-        MATCH (r:Rating {node_id: $node_id})
-        SET r.rating = $rating,
-            r.comment = $comment,
-            r.final_feeling = $final_feeling,
-            r.recommend = $recommend
+    def _update_rating_tx(tx, rating_id: str, user_id: str, rating: int, comment: str, final_feeling: str, recommend: bool):
+        query_parts = []
+        params = {"rating_id": rating_id}
+
+        if rating_id is not None:
+            query_parts.append("r.rating_id = $rating_id")
+            params["rating_id"] = rating_id
+        if user_id is not None:
+            query_parts.append("u.user_id = $user_id")
+            params["user_id"] = user_id
+        if rating is not None:
+            query_parts.append("r.rating = $rating")
+            params["rating"] = rating
+        if comment is not None:
+            query_parts.append("r.comment = $comment")
+            params["comment"] = comment
+        if final_feeling is not None:
+            query_parts.append("r.final_feeling = $final_feeling")
+            params["final_feeling"] = final_feeling
+        if recommend is not None:
+            query_parts.append("r.recommend = $recommend")
+            params["recommend"] = recommend
+
+        if not query_parts:
+            return {"message": "No se han proporcionado datos para actualizar."}
+
+        query = f"""
+        MATCH (r:Rating {{rating_id: $rating_id}})<-[rel:RATED]-(u:User {{user_id: $user_id}})
+        SET {", ".join(query_parts)},
+            rel.rating_change_count = COALESCE(rel.rating_change_count, 0) + 1
+        RETURN r.rating_id AS rating_id, r.rating AS rating, 
+            r.comment AS comment, r.final_feeling AS final_feeling, 
+            r.recommend AS recommend,
+            rel.rating_change_count AS rating_change_count
         """
-        tx.run(
-            query,
-            node_id=rating.node_id,
-            rating=rating.rating,
-            comment=rating.comment,
-            final_feeling=rating.final_feeling,
-            recommend=rating.recommend
-        )
+
+        result = tx.run(query, **params)
+        return result.single()
 
     def delete_rating(self, rating_id: str):
         #Elimina un nodo Rating de la base de datos por su id.
@@ -197,7 +239,7 @@ class RatingController:
         # Generate random properties
         rating_date = self._generate_random_date()
         recommendation_level = rating.rating  # Same as rating
-        rating_change_count = random.randint(0, 3)
+        rating_change_count = 0
 
         relevance = round(random.uniform(0.5, 1.0), 2)
         rating_context = random.choice(["Casual Watch", "Cinephile Review", "Critic Opinion", "First Time View", "Rewatch"])
