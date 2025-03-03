@@ -86,6 +86,35 @@ class RatingController:
         ORDER BY r.node_id
         """
         return tx.run(query)
+    
+    #Get Rating
+    def get_ratings_user(self, user_id: str):
+        #Obtiene todos los Ratings en la base de datos.
+        #Retorna una lista de registros.
+        with self.driver.session() as session:
+            results = session.execute_read(self._get_ratings_user_tx, user_id)
+            return results
+
+    @staticmethod
+    def _get_ratings_user_tx(tx, user_id: str):
+        query = """
+            MATCH (u:User {user_id: $user_id})-[rr:RATED]->(r:Rating)
+            MATCH (r)-[b:BELONGS_TO]->(m:Media)
+            MATCH (t)-[:IS_A]->(m)
+            RETURN 
+            rr.recommendation_level As Recomendation,
+            rr.rating_date as Date,
+            r.rating_id as rating_id,
+            r.rating as Rating,
+            r.comment as Comment,
+            t.title as Title;
+
+        """
+        result =  tx.run(
+            query,
+            user_id=user_id
+        )   
+        return [record.data() for record in result]
 
     def update_rating(self, rating: Rating):
         #Actualiza la información de un Rating existente.
@@ -120,7 +149,7 @@ class RatingController:
     @staticmethod
     def _delete_rating_tx(tx, rating_id: str):
         query = """
-        MATCH (r:Rating {node_id: $rating_id})
+        MATCH (r:Rating {rating_id: $rating_id})
         DETACH DELETE r
         """
         tx.run(query, rating_id=rating_id)

@@ -213,6 +213,10 @@ class UserController:
         WHERE NOT EXISTS {
             MATCH (:User {user_id: $user_id})-[:RATED]->(:Rating)-[:BELONGS_TO]->(m)
         }
+        AND EXISTS {
+            MATCH (:User {user_id: $user_id})-[:LIKES]->(g:Genre)
+            MATCH (m)-[:HAS_GENRE]->(g)
+        }
         RETURN 
             med.media_id AS media_id, 
             med.title AS media_title,
@@ -263,6 +267,10 @@ class UserController:
         MATCH (med:Media)-[:IS_A]->(m:Media:Serie)
         WHERE NOT EXISTS {
             MATCH (:User {user_id: $user_id})-[:RATED]->(:Rating)-[:BELONGS_TO]->(m)
+        }
+        AND EXISTS {
+            MATCH (:User {user_id: $user_id})-[:LIKES]->(g:Genre)
+            MATCH (m)-[:HAS_GENRE]->(g)
         }
         RETURN 
             med.media_id AS media_id, 
