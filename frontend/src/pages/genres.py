@@ -61,7 +61,10 @@ def show():
     st.write(f"Visualiza y gestiona los géneros que te gustan o no te gustan, {user['name']}.")
     if st.button("Crea un nuevo genero 🌠", key="create"):
         create_genre()
-    # Instanciar controladores
+
+    if st.button("🕵️‍♀️ Insights de los generos 👀", key="update"):
+        genre_insights()
+        
     genre_controller = GenreController()
     likes_controller = LikesRelationController()
     dislikes_controller = DislikesRelationController()
@@ -194,7 +197,6 @@ def show():
 
 @st.dialog("Sube tu rating ⭐")
 def create_genre():
-    st.write('creanfo un genero')
     genresController = GenreController()
     generos_existentes = [genre["name"] for genre in genresController.get_all_genres()]
     
@@ -230,3 +232,34 @@ def create_genre():
 
         st.success(f"✅ ¡El género '{name}' ha sido creado exitosamente!")
         st.rerun() 
+    
+@st.dialog("Genre insights")
+def genre_insights():
+    st.title("Los generos mas gustados por nuestros usarios 🤩")
+    
+    genre_controller = GenreController()
+
+
+    total_genres = genre_controller.get_total_genres()
+    st.info(f"📢 Actualmente tenemos **{total_genres} géneros** en nuestra plataforma!")
+
+    # Get genre popularity
+    popular_genres = genre_controller.get_genre_popularity()
+
+    if not popular_genres:
+        st.warning("No hay información disponible sobre los géneros más gustados.")
+        return
+
+    # Convert to DataFrame
+    df = pd.DataFrame(popular_genres)
+
+    # Display the DataFrame
+    st.subheader("📊 Ranking de Géneros por Likes")
+    st.dataframe(df)
+
+    # Highlight the most liked genre
+    most_liked_genre = df.iloc[0]["genre"] if not df.empty else "N/A"
+    most_likes = df.iloc[0]["like_count"] if not df.empty else 0
+
+    st.success(f"🏆 ¡El género más gustado es **{most_liked_genre}** con **{most_likes} likes**!")
+    

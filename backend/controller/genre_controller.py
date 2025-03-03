@@ -154,3 +154,38 @@ class GenreController:
             description=genre.description,
             popular=genre.popular
         )
+    
+    def get_genre_popularity(self):
+        """
+        Retrieves genres ordered by the number of likes in descending order.
+        """
+        with self.driver.session() as session:
+            result = session.execute_read(self._get_genre_popularity_tx)
+        return result
+
+    @staticmethod
+    def _get_genre_popularity_tx(tx):
+        query = """
+        MATCH (u:User)-[l:LIKES]->(g:Genre)
+        RETURN g.name AS genre, COUNT(l) AS like_count
+        ORDER BY like_count DESC
+        """
+        result = tx.run(query)
+        return [record.data() for record in result]
+
+    def get_total_genres(self):
+        """
+        Returns the total number of genres in the database.
+        """
+        with self.driver.session() as session:
+            result = session.execute_read(self._get_total_genres_tx)
+        return result
+
+    @staticmethod
+    def _get_total_genres_tx(tx):
+        query = """
+        MATCH (g:Genre)
+        RETURN COUNT(g) AS total_genres
+        """
+        result = tx.run(query).single()
+        return result["total_genres"] if result else 0
