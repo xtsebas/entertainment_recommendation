@@ -5,10 +5,13 @@ import sys
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from backend.controller.user_controller import UserController
 from backend.view.user import User
+from backend.controller.genre_controller import GenreController
 
 # Lista de géneros disponibles
-GENRES = ["Acción", "Comedia", "Drama", "Terror", "Ciencia Ficción", "Romance", "Aventura", "Documental", "Fantasía"]
+genresController = GenreController()
+GENRES = [genre["name"] for genre in genresController.get_all_genres()]
 
+print(GENRES)
 def signup():
     """Muestra la pantalla de registro de usuario."""
     st.title("Registro de Nuevo Usuario")
