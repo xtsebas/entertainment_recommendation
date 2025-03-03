@@ -74,7 +74,7 @@ def show():
     
     rating_controller.close()
 
-@st.dialog("Sube tu rating ⭐")
+@st.dialog("Edita tu rating ⭐")
 def rate(media_type: str, rating_id: str, media_title=str):
     user = st.session_state["user"]
     st.write(media_title)
