@@ -126,3 +126,31 @@ class GenreController:
         SET g.avg = $count, g.popular = $is_popular
         """
         tx.run(query, genre_id=genre_id, count=count, is_popular=is_popular)
+    
+    def create_new_genre(self, genre: Genre):
+        """
+        Creates a new Genre node in the database.
+        """
+        with self.driver.session() as session:
+            session.execute_write(self._create_new_genre_tx, genre)
+
+    @staticmethod
+    def _create_new_genre_tx(tx, genre: Genre):
+        query = """
+        CREATE (g:Genre {
+            genre_id: $genre_id,
+            name: $name,
+            avg: $avg,
+            description: $description,
+            popular: $popular
+        })
+        RETURN g
+        """
+        tx.run(
+            query,
+            genre_id=genre.genre_id,
+            name=genre.name,
+            avg=genre.avg,
+            description=genre.description,
+            popular=genre.popular
+        )

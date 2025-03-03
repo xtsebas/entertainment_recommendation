@@ -3,6 +3,8 @@ import sys
 import os
 import pandas as pd
 from datetime import date
+import uuid
+import random
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from backend.controller.genre_controller import GenreController
@@ -13,6 +15,37 @@ from backend.view.relations.dislikes import DislikesRelation
 
 
 def show():
+
+
+    st.markdown("""
+    <style>
+    /* Aplica a los botones generados con st.button */
+    .stButton>button {
+         width: 100%;
+         height: 60px;
+         font-size: 20px;
+         font-weight: bold;
+         border-radius: 8px;
+         margin: 10px 0;
+         transition: 0.3s;
+         color: white;
+         border: none;
+    }
+    /* Estilos individuales para cada botón */
+    .stButton>button:focus { outline: none; }
+    .st-key-create button { background: linear-gradient(90deg, #4CAF50, #66BB6A); }
+    .st-key-read button { background: linear-gradient(90deg, #2196F3, #42A5F5); }
+    .st-key-update button { background: linear-gradient(90deg, #FFC107, #FFCA28); }
+    .st-key-delete button { background: linear-gradient(90deg, #F44336, #E57373); }
+    .stButton>button:hover { 
+    filter: brightness(90%); 
+    color: black;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+
+    
+         
     # Verificar si hay un usuario autenticado en la sesión
     if "user" not in st.session_state or not st.session_state["user"]:
         st.warning("⚠️ No hay usuario autenticado en la sesión.")
@@ -26,7 +59,8 @@ def show():
 
     st.title("⭐ Gestión de Géneros")
     st.write(f"Visualiza y gestiona los géneros que te gustan o no te gustan, {user['name']}.")
-
+    if st.button("Crea un nuevo genero 🌠", key="create"):
+        create_genre()
     # Instanciar controladores
     genre_controller = GenreController()
     likes_controller = LikesRelationController()
@@ -157,3 +191,42 @@ def show():
     }
     </style>
     """, unsafe_allow_html=True)
+
+@st.dialog("Sube tu rating ⭐")
+def create_genre():
+    st.write('creanfo un genero')
+    genresController = GenreController()
+    generos_existentes = [genre["name"] for genre in genresController.get_all_genres()]
+    
+    name = st.text_input("Nombre del género:")
+    description = st.text_area("Descripción del género:")
+    popular = st.checkbox("¿Es un género popular?")
+
+    # Button to Create Genre
+    if st.button("Crear Género"):
+        if not name or not description:
+            st.warning("Por favor, completa todos los campos.")
+            return
+
+        if name in generos_existentes:
+            st.warning("El genero ya existe") 
+            return
+        # Generate random values
+        genre_id = str(uuid.uuid4())  # Unique ID
+        avg = round(random.uniform(1, 5), 2)  # Random float between 1 and 5
+
+        # Create Genre object
+        new_genre = Genre(
+            genre_id=genre_id,
+            name=name,
+            avg=avg,
+            description=description,
+            popular=popular
+        )
+
+        # Call Controller to Insert into DB
+        genre_controller = GenreController()
+        genre_controller.create_new_genre(new_genre)
+
+        st.success(f"✅ ¡El género '{name}' ha sido creado exitosamente!")
+        st.rerun() 
