@@ -85,7 +85,7 @@ def show():
         with col2:
             if st.button(f"Agregar", key=genre["name"]):
                 print("I will add genre with genre_name -> ", genre["name"])
-                likes_controller.create_likes_relation(user_id, genre["name"])
+                likes_controller.create_likes_relation_2(user_id, genre["name"])
                 st.success(f"¡'{genre}' ha sido agregado a tus gustos!")
                 st.rerun()  
     

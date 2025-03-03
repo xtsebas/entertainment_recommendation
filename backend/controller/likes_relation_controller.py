@@ -70,7 +70,7 @@ class LikesRelationController:
         result = tx.run(query, user_id=user_id)
         return [record["genre"] for record in result]
 
-    def create_likes_relation(self, user_id: str, genre_name: str):
+    def create_likes_relation_2(self, user_id: str, genre_name: str):
         """
         Creates a LIKES relationship between a User and a Genre with random properties.
         """
@@ -81,11 +81,11 @@ class LikesRelationController:
 
         with self.driver.session() as session:
             session.execute_write(
-                self._create_likes_tx, user_id, genre_name, preference_level, aggregation_date, last_engagement
+                self._create_likes_tx_2, user_id, genre_name, preference_level, aggregation_date, last_engagement
             )
 
     @staticmethod
-    def _create_likes_tx(tx, user_id: str, genre_name: str, preference_level: int, aggregation_date: str, last_engagement: str):
+    def _create_likes_tx_2(tx, user_id: str, genre_name: str, preference_level: int, aggregation_date: str, last_engagement: str):
         query = """
         MATCH (u:User {user_id: $user_id})
         MATCH (g:Genre {name: $genre_name}) 
@@ -109,6 +109,31 @@ class LikesRelationController:
             preference_level=preference_level,
             aggregation_date=aggregation_date,
             last_engagement=last_engagement
+        )
+    
+    def create_likes_relation(self, user_id: str, genre_id: str, preference_level: int, aggregation_date: date, last_engagement: date):
+        """Crea la relación LIKES entre un usuario y un género usando IDs."""
+        with self.driver.session() as session:
+            session.execute_write(self._create_likes_tx, user_id, genre_id, preference_level, aggregation_date, last_engagement)
+
+    @staticmethod
+    def _create_likes_tx(tx, user_id: str, genre_id: str, preference_level: int, aggregation_date: date, last_engagement: date):
+        query = """
+        MATCH (u:User {user_id: $user_id})
+        MATCH (g:Genre {genre_id: $genre_id}) 
+        MERGE (u)-[r:LIKES]->(g)
+        SET r.preference_level = $preference_level,
+            r.aggregation_date = $aggregation_date,
+            r.last_engagement = $last_engagement
+        RETURN r
+        """
+        tx.run(
+            query,
+            user_id=user_id,
+            genre_id=genre_id,
+            preference_level=preference_level,
+            aggregation_date=aggregation_date.isoformat(),
+            last_engagement=last_engagement.isoformat()
         )
 
     @staticmethod
