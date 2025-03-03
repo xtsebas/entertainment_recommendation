@@ -45,6 +45,7 @@ class LikesRelationController:
     def _delete_likes_tx(tx, user_id: str, genre_id: str):
         query = """
         MATCH (u:User {user_id: $user_id})-[r:LIKES]->(g:Genre {genre_id: $genre_id})
+        MATCH (u:User {user_id: $user_id})-[r:LIKES]->(g:Genre {genre_id: $genre_id})
         DELETE r
         """
         tx.run(query, user_id=user_id, genre_id=genre_id)
