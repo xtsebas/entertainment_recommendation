@@ -38,27 +38,17 @@ def show():
     dislikes_data = dislikes_controller.get_dislikes_by_user(user_id) or []
     # Todos los géneros
     all_genres = genre_controller.get_all_genres() or []
+    
+    unrated_genres = likes_controller.get_unrated_genres(user_id=user_id) or []
     # Crear DataFrames para likes y dislikes
     df_likes = pd.DataFrame(likes_data)
     df_dislikes = pd.DataFrame(dislikes_data)
     # Ajustar nombres de columnas para visualización
-    if not df_likes.empty:
-        df_likes.rename(columns={
-            "genre_id": "ID Género",
-            "genre_name": "Nombre",
-            "preference_level": "Preferencia",
-            "aggregation_date": "Fecha Agregado",
-            "last_engagement": "Última Interacción"
-        }, inplace=True)
+    
+    print("likes data :)")
+    print(df_likes)
 
-    if not df_dislikes.empty:
-        df_dislikes.rename(columns={
-            "genre_id": "ID Género",
-            "genre_name": "Nombre",
-            "rejection_level": "Rechazo",
-            "aggregation_date": "Fecha Agregado",
-            "last_engagement": "Última Interacción"
-        }, inplace=True)
+    
 
     # Mostrar likes en una sección
     st.subheader("Géneros que te gustan")
@@ -71,16 +61,34 @@ def show():
         st.markdown('</div>', unsafe_allow_html=True)
 
         # Botones para eliminar "LIKE"
-        st.write("### Eliminar 'LIKE'")
+        st.write("### Eliminar de mis generos ❌")
         for idx, row in df_likes.iterrows():
             col1, col2 = st.columns([4,1])
             with col1:
-                st.text(f"{row['Nombre']} (Preferencia: {row['Preferencia']}, Fecha: {row['Fecha Agregado']})")
+                st.text(f"{row['genre_name']} (preference_level: {row['preference_level']}, Fecha: {row['aggregation_date']})")
             with col2:
-                if st.button("❌", key=f"like_{row['ID Género']}"):
-                    likes_controller.delete_likes_relation(user_id, row["ID Género"])
-                    st.success(f"Se ha eliminado el 'LIKE' del género {row['Nombre']}")
-                    st.experimental_rerun()
+                if st.button("❌", key=f"like_{row['genre_name']}"):
+                    likes_controller.delete_likes_relation(user_id, row["genre_id"])
+                    st.success(f"Se ha eliminado el 'LIKE' del género {row['genre_name']}")
+                    st.rerun()
+    st.subheader('Agregar generos a mis gustos')
+    
+    if not all_genres:
+        st.info('No hay generos para agregar')
+    
+    for genre in all_genres:
+        col1, col2 = st.columns([3, 1])  # Create two columns (Genre Name | Add Button)
+        
+        with col1:
+            st.write(f"🤖 {genre["name"]}")
+
+        with col2:
+            if st.button(f"Agregar", key=genre["name"]):
+                print("I will add genre with genre_name -> ", genre["name"])
+                likes_controller.create_likes_relation(user_id, genre["name"])
+                st.success(f"¡'{genre}' ha sido agregado a tus gustos!")
+                st.rerun()  
+    
 
     st.write("---")
 
@@ -89,73 +97,46 @@ def show():
     if df_dislikes.empty:
         st.info("Aún no has marcado ningún género como no favorito.")
     else:
-        st.markdown('<div class="dataframe-container">', unsafe_allow_html=True)
         st.dataframe(df_dislikes, use_container_width=True)
-        st.markdown('</div>', unsafe_allow_html=True)
 
-        # Botones para eliminar "DISLIKE"
-        st.write("### Eliminar 'DISLIKE'")
-        for idx, row in df_dislikes.iterrows():
-            col1, col2 = st.columns([4,1])
-            with col1:
-                st.text(f"{row['Nombre']} (Rechazo: {row['Rechazo']}, Fecha: {row['Fecha Agregado']})")
-            with col2:
-                if st.button("❌", key=f"dislike_{row['ID Género']}"):
-                    dislikes_controller.delete_dislikes_relation(user_id, row["ID Género"])
-                    st.success(f"Se ha eliminado el 'DISLIKE' del género {row['Nombre']}")
-                    st.experimental_rerun()
+        # # Botones para eliminar "DISLIKE"
+        # st.write("### Eliminar 'DISLIKE'")
+        # for idx, row in df_dislikes.iterrows():
+        #     col1, col2 = st.columns([4,1])
+        #     with col1:
+        #         st.text(f"{row['Nombre']} (Rechazo: {row['Rechazo']}, Fecha: {row['Fecha Agregado']})")
+        #     with col2:
+        #         if st.button("❌", key=f"dislike_{row['ID Género']}"):
+        #             dislikes_controller.delete_dislikes_relation(user_id, row["ID Género"])
+        #             st.success(f"Se ha eliminado el 'DISLIKE' del género {row['Nombre']}")
+        #             st.experimental_rerun()
 
     st.write("---")
 
     # Agregar un nuevo DISLIKE
-    st.subheader("Agregar Género a 'No me gusta'")
+    st.subheader("👎 Agregar géneros que NO me gustan")
+    print(all_genres)
 
-    # Conjuntos para filtrar géneros disponibles
-    liked_ids = set(df_likes["ID Género"]) if not df_likes.empty else set()
-    disliked_ids = set(df_dislikes["ID Género"]) if not df_dislikes.empty else set()
+    if not all_genres:
+        st.info("No hay géneros disponibles.")
+        return
 
-    # Filtrar los géneros que no están en like ni en dislike
-    available_for_dislike = [
-        g for g in all_genres
-        if g["id"] not in liked_ids and g["id"] not in disliked_ids
-    ]
+    # Display genres with "Dislike" buttons
+    for genre in all_genres:
+        col1, col2 = st.columns([3, 1])  # Two columns: Genre Name | Dislike Button
 
-    if available_for_dislike:
-        # Mapear {nombre: dict_de_género} para el selectbox
-        genre_map = {g["name"]: g for g in available_for_dislike}
-        selected_name = st.selectbox("Selecciona un género:", list(genre_map.keys()))
-        selected_genre = genre_map[selected_name]
+        with col1:
+            st.write(f"🎵 {genre['name']}")
 
-        # Campos para la relación DISLIKES
-        rejection_level = st.number_input("Nivel de rechazo:", min_value=1, max_value=10, value=5)
-        aggregation_date_val = st.date_input("Fecha Agregado:", value=date.today())
-        last_engagement_val = st.date_input("Última Interacción:", value=date.today())
+        with col2:
+            if st.button("Dislike", key=genre['id']):
+                print("I will dislike genre_id -> ", genre["id"])
+                dislikes_controller.dislike_genre_by_user(user_id=user_id, genre_id=genre["id"])
+                st.success(f"¡'{genre['name']}' ha sido marcado como 'Disliked'!")
+                st.rerun()  
 
-        if st.button("Agregar a 'No me gusta'"):
-            # Crear un nodo dummy para el usuario
-            user_node = type("DummyUser", (), {"node_id": user_id})
-            # Crear nodo Genre
-            genre_node = Genre(
-                genre_id=selected_genre["id"],
-                name=selected_genre["name"],
-                avg=selected_genre.get("avg", 0),
-                description=selected_genre.get("description", ""),
-                popular=selected_genre.get("popular", False)
-            )
-            # Crear la relación
-            relation = DislikesRelation(
-                start_node=user_node,
-                end_node=genre_node,
-                rejection_level=rejection_level,
-                aggregation_date=aggregation_date_val.isoformat(),
-                last_engagement=last_engagement_val.isoformat()
-            )
-            # Guardar 
-            dislikes_controller.create_dislikes_relation(relation)
-            st.success(f"Se agregó el género '{selected_name}' a tu lista de 'No me gusta'.")
-            st.experimental_rerun()
-    else:
-        st.info("No hay géneros disponibles para marcar como no te gustan.")
+
+    
 
     # Inyectar estilos 
     st.markdown("""
